@@ -56,7 +56,7 @@ XInput_Init(dll="C:\Windows\System32\xinput1_3")
     
     ;=============== END CONSTANTS =================
     
-    _XInput_hm := DllCall("LoadLibrary" ,"str",dll)
+    _XInput_hm := DllCall("LoadLibrary" ,"str",dll, "ptr")
     
     if !_XInput_hm
     {

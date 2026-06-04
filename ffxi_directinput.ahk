@@ -83,7 +83,7 @@ SendInput {NumpadAdd}
 return
 
 ; Gamecube Y Button (Playstation Triangle, Xbox Y Button, Nintendo X Button, TOP face button)
-Joy1::
+Joy4::
 If WinActive("ahk_class FFXiClass") {
   If (isLeftTriggerDown or isRightTriggerDown) {
     SendInput {f8}
@@ -124,7 +124,7 @@ If WinActive("ahk_class FFXiClass") {
 return
 
 ; Gamecube B Button (Playstation Square, Xbox X Button, Nintendo Y Button, LEFT face button)
-Joy2::
+Joy3::
 If WinActive("ahk_class FFXiClass") {
   If (isLeftTriggerDown or isRightTriggerDown) {
     SendInput {f6}
@@ -175,7 +175,7 @@ If WinActive("ahk_class FFXiClass") {
 return
 
 ; Gamecube A Button (Playstation Cross, Xbox A Button, Nintendo B Button, BOTTOM face button)
-Joy3::
+Joy1::
 If WinActive("ahk_class FFXiClass") {
   If (isLeftTriggerDown or isRightTriggerDown) {
     SendInput {f5}
@@ -216,7 +216,7 @@ If WinActive("ahk_class FFXiClass") {
 return
 
 ; Gamecube X Button (Playstation Circle, Xbox B Button, Nintendo A Button, RIGHT face button)
-Joy4::
+Joy2::
 If WinActive("ahk_class FFXiClass") {
   If (isLeftTriggerDown or isRightTriggerDown) {
     SendInput {f7}
@@ -267,7 +267,7 @@ If WinActive("ahk_class FFXiClass") {
 return
 
 ; Left Trigger
-Joy7::
+Joy5::
 If WinActive("ahk_class FFXiClass") {
   SendInput {Ctrl down}
   SendInput {f11 down}
@@ -278,7 +278,7 @@ return
 
 WaitForButtonUp7:
 If WinActive("ahk_class FFXiClass") {
-  if GetKeyState("Joy7")  ; The button is still, down, so keep waiting.
+  if GetKeyState("Joy5")  ; The button is still, down, so keep waiting.
       return
   ; Otherwise, the button has been released.
   SendInput {f11 up}
@@ -291,7 +291,7 @@ If WinActive("ahk_class FFXiClass") {
 return
 
 ; Right Trigger
-Joy8::
+Joy6::
 If WinActive("ahk_class FFXiClass") {
   SendInput {Ctrl down}
   SendInput {f12 down}
@@ -302,7 +302,7 @@ return
 
 WaitForButtonUp8:
 If WinActive("ahk_class FFXiClass") {
-  if GetKeyState("Joy8")  ; The button is still, down, so keep waiting.
+  if GetKeyState("Joy6")  ; The button is still, down, so keep waiting.
       return
   ; Otherwise, the button has been released.
   SendInput {f12 up}
@@ -315,7 +315,7 @@ If WinActive("ahk_class FFXiClass") {
 return
 
 ; Opens/closes gamepad binding dialog
-Joy9::
+Joy7::
 If WinActive("ahk_class FFXiClass") {
   SendInput {Ctrl down}
   SendInput {f9 down}
@@ -325,7 +325,7 @@ return
 
 WaitForButtonUp9:
 If WinActive("ahk_class FFXiClass") {
-  if GetKeyState("Joy9")  ; The button is still, down, so keep waiting.
+  if GetKeyState("Joy7")  ; The button is still, down, so keep waiting.
       return
   ; Otherwise, the button has been released.
   SendInput {f9 up}
@@ -335,7 +335,7 @@ If WinActive("ahk_class FFXiClass") {
 return
 
 ; Shows the environment list
-Joy10::
+Joy8::
 If WinActive("ahk_class FFXiClass") {
   SendInput {Ctrl down}
   SendInput {f10 down}
@@ -346,7 +346,7 @@ return
 
 WaitForButtonUp10:
 If WinActive("ahk_class FFXiClass") {
-  if GetKeyState("Joy10")  ; The button is still, down, so keep waiting.
+  if GetKeyState("Joy8")  ; The button is still, down, so keep waiting.
       return
   ; Otherwise, the button has been released.
   SendInput {f10 up}

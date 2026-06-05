@@ -146,12 +146,13 @@ local SPELL_TYPE_LOOKUP = {
     ['SummonerPact'] = 'summoning magic',
 }
 
-function action_binder:setup(buttonmapping, save_binding_func, delete_binding_func, theme_options, get_crossbar_sets_func, base_x, base_y, max_width, max_height)
-    self.button_layout = buttonmapping.button_layout
-    self.confirm_button = buttonmapping.confirm_button
-    self.cancel_button = buttonmapping.cancel_button
-    self.mainmenu_button = buttonmapping.mainmenu_button
-    self.activewindow_button = buttonmapping.activewindow_button
+function action_binder:setup(save_binding_func, delete_binding_func, theme_options, get_crossbar_sets_func, base_x, base_y, max_width, max_height)
+    -- TODO: untangle this mess
+    self.button_layout = 'xbox'
+    self.confirm_button = 'a'
+    self.cancel_button = 'b'
+    self.mainmenu_button = 'y'
+    self.activewindow_button = 'x'
     self.save_binding = save_binding_func
     self.delete_binding = delete_binding_func
     self.get_crossbar_sets_binding = get_crossbar_sets_func

@@ -142,52 +142,52 @@ HandleJoyButton(joyButton) {
 
     Send_XL_Up()
     {
-        SendInput("^{F1}")
+        SendInput("^{F1 up}")
     }
 
     Send_XL_Down()
     {
-        SendInput("^{F2}")
+        SendInput("^{F2 up}")
     }
 
     Send_XL_Left()
     {
-        SendInput("^{F3}")
+        SendInput("^{F3 up}")
     }
 
     Send_XL_Right()
     {
-        SendInput("^{F4}")
+        SendInput("^{F4 up}")
     }
 
     Send_XR_Up()
     {
-        SendInput("^{F5}")
+        SendInput("^{F5 up}")
     }
 
     Send_XR_Down()
     {
-        SendInput("^{F6}")
+        SendInput("^{F6 up}")
     }
 
     Send_XR_Left()
     {
-        SendInput("^{F7}")
+        SendInput("^{F7 up}")
     }
 
     Send_XR_Right()
     {
-        SendInput("^{F8}")
+        SendInput("^{F8 up}")
     }
 
     Send_CS_Next()
     {
-        SendInput("^{F1}")
+        SendInput("^{F1 up}")
     }
 
     Send_CS_Previous()
     {
-        SendInput("^{F2}")
+        SendInput("^{F2 up}")
     }
 
     Send_FM_Confirm()
@@ -212,7 +212,7 @@ HandleJoyButton(joyButton) {
 
     Send_FM_ToggleBind()
     {
-        SendInput("^{F9}")
+        SendInput("^{F9 up}")
     }
 
     Send_FM_CycleSets_Press(keyName, releaseState)

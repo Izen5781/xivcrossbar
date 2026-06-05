@@ -1,84 +1,61 @@
 local gamepad = {}
 
 local face_buttons = {
-  [63] = true,
-  [64] = true,
-  [65] = true,
-  [66] = true,
-  [67] = true,
-  [68] = true
+    [63] = true,
+    [64] = true,
+    [65] = true,
+    [66] = true,
+    [67] = true,
+    [68] = true
 }
 
 local dpad_button = {
-  [59] = true,
-  [60] = true,
-  [61] = true,
-  [62] = true
+    [59] = true,
+    [60] = true,
+    [61] = true,
+    [62] = true
 }
 
-local dpad_up = 59
-local dpad_right = 60
-local dpad_down = 61
-local dpad_left = 62
-local button_a = 63
-local button_b = 64
-local button_x = 65
-local button_y = 66
-local minus = 67
-local plus = 68
-local left_trigger = 87
-local right_trigger = 88
+-- TODO: maybe have callers compare to these variables instead of using functions?
+local dpad_up = 59 -- F1
+local dpad_right = 60 -- F2
+local dpad_down = 61 -- F3
+local dpad_left = 62 -- F4
+local button_a = 63 -- F5
+local button_b = 64 -- F6
+local button_x = 65 -- F7
+local button_y = 66 -- F8
+local minus = 67 -- F9
+local plus = 68 -- F10
+local left_trigger = 87 -- F11
+local right_trigger = 88 -- F12
+
+-- https://community.bistudio.com/wiki/DIK_KeyCodes
+
+-- XL = XbarLeft
+gamepad.isXL_Up = function(dik) return dik == 59 end -- F1
+gamepad.isXL_Down = function(dik) return dik == 60 end -- F2
+gamepad.isXL_Left = function(dik) return dik == 61 end -- F3
+gamepad.isXL_Right = function(dik) return dik == 62 end -- F4
+
+-- XR = XbarRight
+gamepad.isXR_Up = function(dik) return dik == 63 end -- F5
+gamepad.isXR_Down = function(dik) return dik == 64 end -- F6
+gamepad.isXR_Left = function(dik) return dik == 65 end -- F7
+gamepad.isXR_Right = function(dik) return dik == 66 end -- F8
+
+-- CS = CycleSets
+gamepad.isCS_Next = function(dik) return dik == 59 end -- F1
+gamepad.isCS_Previous = function(dik) return dik == 60 end -- F2
+
+-- FM = FunctionMap
+gamepad.isFM_ToggleBind = function(dik) return dik == 67 end -- F9
+gamepad.isFM_CycleSets = function(dik) return dik == 68 end -- F10
+gamepad.isFM_XbarLeft = function(dik) return dik == 87 end -- F11
+gamepad.isFM_XbarRight = function(dik) return dik == 88 end -- F12
 
 function gamepad.is_face_button_or_dpad(dik)
-  return face_buttons[dik] ~= nil or dpad_button[dik] ~= nil
-end
-
-function gamepad.is_minus(dik)
-  return dik == minus
-end
-
-function gamepad.is_plus(dik)
-  return dik == plus
-end
-
-function gamepad.is_dpad_up(dik)
-  return dik == dpad_up
-end
-
-function gamepad.is_dpad_right(dik)
-  return dik == dpad_right
-end
-
-function gamepad.is_dpad_down(dik)
-  return dik == dpad_down
-end
-
-function gamepad.is_dpad_left(dik)
-  return dik == dpad_left
-end
-
-function gamepad.is_button_a(dik)
-  return dik == button_a
-end
-
-function gamepad.is_button_b(dik)
-  return dik == button_b
-end
-
-function gamepad.is_button_x(dik)
-  return dik == button_x
-end
-
-function gamepad.is_button_y(dik)
-  return dik == button_y
-end
-
-function gamepad.is_left_trigger(dik)
-  return dik == left_trigger
-end
-
-function gamepad.is_right_trigger(dik)
-  return dik == right_trigger
+    return face_buttons[dik] ~= nil or dpad_button[dik] ~= nil
 end
 
 return gamepad

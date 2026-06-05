@@ -26,6 +26,9 @@
         SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ]]
 
+-- https://github.com/Windower/Lua/wiki/
+-- https://docs.windower.net/commands/
+
 -- Addon description
 _addon.name = 'XIV Crossbar' -- based on Edeon's XIV Hotbar
 _addon.author = 'Aliekber'
@@ -51,7 +54,6 @@ config.save(settings)
 -- Load theme options according to settings
 local theme = require('theme')
 local theme_options = theme.apply(settings)
-local buttonmapping = require('buttonmapping')
 local resource_generator = require('resource_generator')
 resource_generator.generate_outdated_resources()
 
@@ -67,9 +69,7 @@ local enchanted_items = require('enchanted_items')
 local xivcrossbar = require('variables')
 local skillchains = require('libs/skillchain/skillchains')
 local consumables = require('consumables')
-local gamepad_mapper = require('gamepad_mapper')
 local gamepad_converter = require('gamepad_converter')
-local function_key_bindings = require('function_key_bindings')
 
 -----------------------------
 -- Main
@@ -164,20 +164,9 @@ function initialize()
 
     if windower_player == nil then return end
 
-    if (buttonmapping.validate()) then
-        theme_options.button_layout = buttonmapping.button_layout
-        action_binder:setup(buttonmapping, set_hotkey, delete_hotkey, theme_options, get_crossbar_sets, 150, 150, windower.get_windower_settings().ui_x_res - 300, windower.get_windower_settings().ui_y_res - 450)
-    else
-        theme_options.button_layout = 'nintendo'
-        local temp_buttonmapping = {}
-        theme_options.confirm_button = 'a'
-        theme_options.cancel_button = 'b'
-        theme_options.mainmanu_button = 'y'
-        theme_options.activewindow_button = 'x'
-        gamepad_mapper:setup(buttonmapping, start_controller_wrappers, theme_options, 150, 150, windower.get_windower_settings().ui_x_res - 300, windower.get_windower_settings().ui_y_res - 450)
-        gamepad_mapper:show(true)
-        action_binder:setup(temp_buttonmapping, set_hotkey, delete_hotkey, theme_options, get_crossbar_sets, 150, 150, windower.get_windower_settings().ui_x_res - 300, windower.get_windower_settings().ui_y_res - 450)
-    end
+    -- TODO: untangle this mess
+    theme_options.button_layout = 'nintendo'
+    action_binder:setup(set_hotkey, delete_hotkey, theme_options, get_crossbar_sets, 150, 150, windower.get_windower_settings().ui_x_res - 300, windower.get_windower_settings().ui_y_res - 450)
 
     player:initialize(windower_player, server, theme_options, enchanted_items)
     player:load_hotbar()
@@ -435,12 +424,6 @@ function new_environment_command(args)
     set_active_environment(environment)
 end
 
--- command to rerun the setup dialog
-function remap()
-    gamepad_mapper:setup(buttonmapping, start_controller_wrappers, theme_options, 150, 150, windower.get_windower_settings().ui_x_res - 300, windower.get_windower_settings().ui_y_res - 450)
-    gamepad_mapper:show(false)
-end
-
 function regenerate_resources()
     resource_generator.generate_all_resources()
 end
@@ -477,9 +460,6 @@ function display_help_menu()
     windower.send_command('echo To create a new crossbar set, use the command:')
     windower.send_command('echo xb new <crossbar name>')
     windower.send_command('echo ===============================================')
-    windower.send_command('echo To rerun the setup utility, use the command:')
-    windower.send_command('echo xb remap')
-    windower.send_command('echo ===============================================')
     windower.send_command('echo Gamepad Controls (' .. theme_options.button_layout .. '):')
     windower.send_command('echo ' .. plus_button .. ' + D-Pad (↑/↓): Switch between crossbar sets')
     windower.send_command('echo ' .. minus_button .. ': Open/close button bind utility')
@@ -494,41 +474,30 @@ end
 
 -- ON LOAD
 windower.register_event('load',function()
-    if (buttonmapping.validate()) then
-        start_controller_wrappers()
-    end
+    start_controller_wrappers()
 
     if windower.ffxi.get_info().logged_in then
         initialize()
     end
     skillchains.load()
 
-    -- Unbind Ctrl + <F1 through F12> because they're going proxy the gamepad's triggers and buttons
-    -- We use Ctrl instead of Alt because Alt gets stuck in a down state when Alt+Tabbing sometimes
-    -- minus button
-    windower.send_command('unbind ^f1')
-    -- plus button
-    windower.send_command('unbind ^f2')
-    -- dpad up
-    windower.send_command('unbind ^f3')
-    -- dpad right
-    windower.send_command('unbind ^f4')
-    -- dpad down
-    windower.send_command('unbind ^f5')
-    -- dpad left
-    windower.send_command('unbind ^f6')
-    -- a button
-    windower.send_command('unbind ^f7')
-    -- b button
-    windower.send_command('unbind ^f8')
-    -- x button
-    windower.send_command('unbind ^f9')
-    -- y button
-    windower.send_command('unbind ^f10')
-    -- left trigger
-    windower.send_command('unbind ^f11')
-    -- right trigger
-    windower.send_command('unbind ^f12')
+    -- Unbind Ctrl + <F1 through F12> because they're going proxy the gamepad's triggers and buttons.
+    -- We use Ctrl instead of Alt because Alt gets stuck in a down state when Alt+Tabbing sometimes.
+    windower.send_command('unbind ^f1 up') -- XbarLeft Up, CycleSets Next
+    windower.send_command('unbind ^f2 up') -- XbarLeft Down, CycleSets Previous
+    windower.send_command('unbind ^f3 up') -- XbarLeft Left
+    windower.send_command('unbind ^f4 up') -- XbarLeft Right
+    windower.send_command('unbind ^f5 up') -- XbarRight Up
+    windower.send_command('unbind ^f6 up') -- XbarRight Down
+    windower.send_command('unbind ^f7 up') -- XbarRight Left
+    windower.send_command('unbind ^f8 up') -- XbarRight Right
+    windower.send_command('unbind ^f9 up') -- FunctionMap ToggleBind
+    windower.send_command('unbind ^f10') -- FunctionMap CycleSets Pressed
+    windower.send_command('unbind ^f11') -- FunctionMap XbarLeft Pressed
+    windower.send_command('unbind ^f12') -- FunctionMap XbarRight Pressed
+    windower.send_command('unbind ^f10 up') -- FunctionMap CycleSets Released
+    windower.send_command('unbind ^f11 up') -- FunctionMap XbarLeft Released
+    windower.send_command('unbind ^f12 up') -- FunctionMap XbarRight Released
 end)
 
 -- ON LOGIN
@@ -567,8 +536,6 @@ windower.register_event('addon command', function(command, ...)
         update_alias_command(args)
     elseif command == 'n' or command == 'new' then
         new_environment_command(args)
-    elseif command == 'remap' then
-        remap()
     elseif command == 'regenerate' then
         regenerate_resources()
     elseif command == '?' or command == 'help' then
@@ -576,6 +543,7 @@ windower.register_event('addon command', function(command, ...)
     end
 end)
 
+-- https://community.bistudio.com/wiki/DIK_KeyCodes
 local keys = {
     [2] = '1',
     [3] = '2',
@@ -618,24 +586,28 @@ local keys = {
 
 -- ON KEY
 windower.register_event('keyboard', function(dik, pressed, flags, blocked)
-    local left_trigger_just_pressed = pressed and gamepad.is_left_trigger(dik) and not gamepad_state.left_trigger
-    local right_trigger_just_pressed = pressed and gamepad.is_right_trigger(dik) and not gamepad_state.right_trigger
-    local left_trigger_just_released = (not pressed) and gamepad.is_left_trigger(dik) and gamepad_state.left_trigger
-    local right_trigger_just_released = (not pressed) and gamepad.is_right_trigger(dik) and gamepad_state.right_trigger
+
+    -- for testing:
+    -- windower.send_command(string.format("echo dik: %s | pressed: %s | flags: %s | blocked %s", dik, tostring(pressed), flags, tostring(blocked)))
+
+    -- TODO: is there a way to supress D-pad output when holding down shoulder buttons?
+
+    local left_trigger_just_pressed = pressed and gamepad.isFM_XbarLeft(dik) and not gamepad_state.left_trigger
+    local right_trigger_just_pressed = pressed and gamepad.isFM_XbarRight(dik) and not gamepad_state.right_trigger
+    local left_trigger_just_released = (not pressed) and gamepad.isFM_XbarLeft(dik) and gamepad_state.left_trigger
+    local right_trigger_just_released = (not pressed) and gamepad.isFM_XbarRight(dik) and gamepad_state.right_trigger
 
     ui_dirty = left_trigger_just_pressed or right_trigger_just_pressed or left_trigger_just_released or right_trigger_just_released
 
-    if (gamepad.is_left_trigger(dik)) then
+    if (gamepad.isFM_XbarLeft(dik)) then
         gamepad_state.left_trigger = pressed
-    elseif (gamepad.is_right_trigger(dik)) then
+    elseif (gamepad.isFM_XbarRight(dik)) then
         gamepad_state.right_trigger = pressed
     elseif (dik == keyboard.ctrl) then
         gamepad_state.capturing = pressed
     elseif (dik == keyboard.shift) then
         shift_pressed = pressed
-    elseif (gamepad.is_minus(dik)) then
-        gamepad_state.minus_button = pressed
-    elseif (gamepad.is_plus(dik)) then
+    elseif (gamepad.isFM_CycleSets(dik)) then
         gamepad_state.plus_button = pressed
     end
 
@@ -678,16 +650,6 @@ windower.register_event('keyboard', function(dik, pressed, flags, blocked)
     end
 
     -- windower.send_command('@input /echo '..dik)
-
-    -- If the user presses Ctrl+F1 through Ctrl+F10 and neither trigger is down, then activate their bound command
-    local no_triggers_pressed = not gamepad_state.left_trigger and not gamepad_state.right_trigger
-    local no_menu_buttons_pressed = not gamepad_state.minus_button and not gamepad_state.plus_button
-    if (gamepad_state.capturing and no_triggers_pressed and no_menu_buttons_pressed and dik >= keyboard.f1 and dik <= keyboard.f8 and pressed) then
-        local function_key = (dik - keyboard.f1) + 1
-        local natural_binding_key = 'CtrlF' .. function_key .. 'Command'
-        local command = function_key_bindings[natural_binding_key]
-        windower.send_command(command)
-    end
 
     if (env_chooser.capturing and keys[dik] ~= nil) then
         if (pressed) then
@@ -749,7 +711,7 @@ windower.register_event('keyboard', function(dik, pressed, flags, blocked)
         gamepad_state.active_bar = 0
     end
 
-    if (not gamepad_mapper.is_showing and gamepad_state.capturing and gamepad.is_minus(dik) and pressed) then
+    if (gamepad_state.capturing and gamepad.isFM_ToggleBind(dik)) then
         if (action_binder.is_hidden) then
             action_binder:show()
             ui:hide_button_hints()
@@ -763,46 +725,27 @@ windower.register_event('keyboard', function(dik, pressed, flags, blocked)
         return true
     end
 
-    if (gamepad_mapper.is_showing) then
-        if (gamepad.is_face_button_or_dpad(dik)) then
-            if (gamepad.is_button_b(dik)) then
-                gamepad_mapper:button_b(pressed)
-            elseif (gamepad.is_button_a(dik)) then
-                gamepad_mapper:button_a(pressed)
-            elseif (gamepad.is_button_x(dik)) then
-                gamepad_mapper:button_x(pressed)
-            elseif (gamepad.is_button_y(dik)) then
-                gamepad_mapper:button_y(pressed)
-            end
-            return true
-        end
-
-        if (gamepad.is_left_trigger(dik)) then
-            gamepad_mapper:trigger_left(pressed)
-        elseif (gamepad.is_right_trigger(dik)) then
-            gamepad_mapper:trigger_right(pressed)
-        end
-    elseif (not action_binder.is_hidden) then
+    if (not action_binder.is_hidden) then
         if (gamepad_state.capturing) then
             if (gamepad.is_face_button_or_dpad(dik)) then
                 local action_binder_was_showing = not action_binder.is_hidden
 
-                if (gamepad.is_dpad_left(dik)) then
-                    action_binder:dpad_left(pressed)
-                elseif (gamepad.is_dpad_down(dik)) then
-                    action_binder:dpad_down(pressed)
-                elseif (gamepad.is_dpad_right(dik)) then
-                    action_binder:dpad_right(pressed)
-                elseif (gamepad.is_dpad_up(dik)) then
-                    action_binder:dpad_up(pressed)
-                elseif (gamepad.is_button_b(dik)) then
-                    action_binder:button_b(pressed)
-                elseif (gamepad.is_button_a(dik)) then
-                    action_binder:button_a(pressed)
-                elseif (gamepad.is_button_x(dik)) then
-                    action_binder:button_x(pressed)
-                elseif (gamepad.is_button_y(dik)) then
-                    action_binder:button_y(pressed)
+                if (gamepad.isXL_Left(dik)) then
+                    action_binder:dpad_left(true)
+                elseif (gamepad.isXL_Down(dik)) then
+                    action_binder:dpad_down(true)
+                elseif (gamepad.isXL_Right(dik)) then
+                    action_binder:dpad_right(true)
+                elseif (gamepad.isXL_Up(dik)) then
+                    action_binder:dpad_up(true)
+                elseif (gamepad.isXR_Left(dik)) then
+                    action_binder:button_b(true)
+                elseif (gamepad.isXR_Down(dik)) then
+                    action_binder:button_a(true)
+                elseif (gamepad.isXR_Right(dik)) then
+                    action_binder:button_x(true)
+                elseif (gamepad.isXR_Up(dik)) then
+                    action_binder:button_y(true)
                 end
                 if (action_binder_was_showing and action_binder.is_hidden) then
                     ui:maybe_show_button_hints()
@@ -810,22 +753,22 @@ windower.register_event('keyboard', function(dik, pressed, flags, blocked)
                 return true
             end
 
-            if (gamepad.is_left_trigger(dik)) then
+            if (gamepad.isFM_XbarLeft(dik)) then
                 action_binder:trigger_left(pressed)
-            elseif (gamepad.is_right_trigger(dik)) then
+            elseif (gamepad.isFM_XbarRight(dik)) then
                 action_binder:trigger_right(pressed)
             end
         end
     end
 
-    if (env_chooser:is_showing() and pressed) then
+    if (env_chooser:is_showing()) then
         -- handle up and down arrows if the environment chooser is showing
-        if gamepad_state.capturing and gamepad.is_dpad_down(dik) then
+        if gamepad_state.capturing and gamepad.isXL_Down(dik) then
             local prev_environment = env_chooser:get_prev_environment(player.hotbar, player.hotbar_settings.active_environment)
             set_active_environment(prev_environment)
             env_chooser:show_player_environments(player.hotbar, player.hotbar_settings.active_environment)
             return true
-        elseif gamepad_state.capturing and gamepad.is_dpad_up(dik) then -- up dpad
+        elseif gamepad_state.capturing and gamepad.isXL_Up(dik) then -- up dpad
             local next_environment = env_chooser:get_next_environment(player.hotbar, player.hotbar_settings.active_environment)
             set_active_environment(next_environment)
             env_chooser:show_player_environments(player.hotbar, player.hotbar_settings.active_environment)
@@ -835,32 +778,26 @@ windower.register_event('keyboard', function(dik, pressed, flags, blocked)
 
     local any_trigger_down = gamepad_state.left_trigger or gamepad_state.right_trigger
     if (gamepad_state.capturing and any_trigger_down and gamepad.is_face_button_or_dpad(dik)) then
-        if (pressed) then
-            if (gamepad.is_dpad_left(dik)) then
-                trigger_action(1)
-            elseif (gamepad.is_dpad_down(dik)) then
-                trigger_action(2)
-            elseif (gamepad.is_dpad_right(dik)) then
-                trigger_action(3)
-            elseif (gamepad.is_dpad_up(dik)) then
-                trigger_action(4)
-            elseif (gamepad.is_button_b(dik)) then
-                trigger_action(5)
-            elseif (gamepad.is_button_a(dik)) then
-                trigger_action(6)
-            elseif (gamepad.is_button_x(dik)) then
-                trigger_action(7)
-            elseif (gamepad.is_button_y(dik)) then
-                trigger_action(8)
-            end
-
-            if (not (gamepad.is_plus(dik) or gamepad.is_minus(dik))) then
-                return true
-            end
+        if (gamepad.isXL_Left(dik)) then
+            trigger_action(1)
+        elseif (gamepad.isXL_Down(dik)) then
+            trigger_action(2)
+        elseif (gamepad.isXL_Right(dik)) then
+            trigger_action(3)
+        elseif (gamepad.isXL_Up(dik)) then
+            trigger_action(4)
+        elseif (gamepad.isXR_Left(dik)) then
+            trigger_action(5)
+        elseif (gamepad.isXR_Down(dik)) then
+            trigger_action(6)
+        elseif (gamepad.isXR_Right(dik)) then
+            trigger_action(7)
+        elseif (gamepad.isXR_Up(dik)) then
+            trigger_action(8)
         end
     end
 
-    if (gamepad_state.capturing and gamepad.is_plus(dik)) then
+    if (gamepad_state.capturing and gamepad.isFM_CycleSets(dik)) then
         if (pressed) then
             local environments = env_chooser:get_player_environments(player.hotbar)
             env_chooser:show_player_environments(player.hotbar, player.hotbar_settings.active_environment)

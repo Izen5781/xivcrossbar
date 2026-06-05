@@ -1,357 +1,165 @@
-; Run every line
-Critical
+#Requires AutoHotkey >=2.0
 
-#SingleInstance force
+#SingleInstance Force ; if script is run again, replace the old instance
+Critical("On") ; prevent the current thread from being interrupted
+A_HotkeyInterval := 0 ; disable hotkey rate warning
 
-; Switch windows instantaeously
-SetWinDelay, -1
+{ ; REGION: IniReads
 
-; Avoid warning dialogue about over-hits
-#MaxHotkeysPerInterval 50000
-#HotkeyInterval 1
-#WinActivateForce
+    ; This naming convention may seem overly verbose, but it allows me
+    ; to support more complex controller mappings in the future.
 
-IniRead, ButtonLayout, config.ini, ButtonMap, ButtonLayout
-IniRead, ConfirmButton, config.ini, ButtonMap, ConfirmButton
-IniRead, CancelButton, config.ini, ButtonMap, CancelButton
-IniRead, MainMenuButton, config.ini, ButtonMap, MainMenuButton
-IniRead, ActiveWindowButton, config.ini, ButtonMap, ActiveWindowButton
-StringUpper, ButtonLayout, ButtonLayout
-StringUpper, ConfirmButton, ConfirmButton
-StringUpper, CancelButton, CancelButton
-StringUpper, MainMenuButton, MainMenuButton
-StringUpper, ActiveWindowButton, ActiveWindowButton
+    ; XL = XbarLeft
+    XL_JoyPov_Up := IniRead("config.ini", "XbarLeft", "Dpad_Up", 0)
+    XL_JoyPov_Down := IniRead("config.ini", "XbarLeft", "Dpad_Down", 18000)
+    XL_JoyPov_Left := IniRead("config.ini", "XbarLeft", "Dpad_Left", 27000)
+    XL_JoyPov_Right := IniRead("config.ini", "XbarLeft", "Dpad_Right", 9000)
 
-lastKeyPressed := ""
-isLeftTriggerDown := false
-isRightTriggerDown := false
-isEnvironmentDialogOpen := false
+    ; XR = XbarRight
+    XR_JoyButton_Up := IniRead("config.ini", "XbarRight", "Button_Up", 0)
+    XR_JoyButton_Down := IniRead("config.ini", "XbarRight", "Button_Down", 0)
+    XR_JoyButton_Left := IniRead("config.ini", "XbarRight", "Button_Left", 0)
+    XR_JoyButton_Right := IniRead("config.ini", "XbarRight", "Button_Right", 0)
 
-#Persistent  ; Keep this script running until the user explicitly exits it.
-SetTimer, CheckPOVState, 10 ; Poll for POV hat every 10ms
+    ; FM = FunctionMap
+    FM_JoyButton_Confirm := IniRead("config.ini", "FunctionMap", "Button_Confirm", 0)
+    FM_JoyButton_Cancel := IniRead("config.ini", "FunctionMap", "Button_Cancel", 0)
+    FM_JoyButton_MainMenu := IniRead("config.ini", "FunctionMap", "Button_MainMenu", 0)
+    FM_JoyButton_ActiveWindow := IniRead("config.ini", "FunctionMap", "Button_ActiveWindow", 0)
+    FM_JoyButton_ToggleBind := IniRead("config.ini", "FunctionMap", "Button_ToggleBind", 0)
+    FM_JoyButton_CycleSets := IniRead("config.ini", "FunctionMap", "Button_CycleSets", 0)
+    FM_JoyButton_XbarLeft := IniRead("config.ini", "FunctionMap", "Button_XbarLeft", 0)
+    FM_JoyButton_XbarRight := IniRead("config.ini", "FunctionMap", "Button_XbarRight", 0)
+}
 
-CheckPOVState:
-If WinActive("ahk_class FFXiClass") {
-  GetKeyState, joyp, JoyPOV
+SetTimer(CheckJoyPov, 10) ; poll for D-pad changes every 10ms
+OldJoyPov := -1 ; -1 = center position (no angle to report)
 
-  If (isLeftTriggerDown or isRightTriggerDown or isEnvironmentDialogOpen) {
-    If (joyp == 0) {
-      If (lastKeyPressed != "dpad_up") {
-        SendInput {f1}
+GetIsGameWindowActive() {
+    WinActive("ahk_class FFXiClass")
+}
 
-        lastKeyPressed:= "dpad_up"
-      }
-    } else If (joyp == 9000) {
-      If (lastKeyPressed != "dpad_right") {
-        SendInput {f2}
+GetIsXbarActive() {
+    return GetKeyState("Joy" FM_JoyButton_XbarLeft)
+        or GetKeyState("Joy" FM_JoyButton_XbarRight)
+}
 
-        lastKeyPressed:= "dpad_right"
-      }
-    } else If (joyp == 18000) {
-      If (lastKeyPressed != "dpad_down") {
-        SendInput {f3}
+CheckJoyPov() {
 
-        lastKeyPressed:= "dpad_down"
-      }
-    } else If (joyp == 27000) {
-      If (lastKeyPressed != "dpad_left") {
-        SendInput {f4}
+    ; modifies these global variables
+    global OldJoyPov
 
-        lastKeyPressed:= "dpad_left"
-      }
+    newJoyPov := GetKeyState("JoyPOV") ; D-pad
+
+    if (newJoyPov == OldJoyPov) {
+        return
     }
-  }
 
-  If (joyp == -1 and lastKeyPressed != "") {
-      lastKeyPressed:= ""
-  }
+    HandleJoyPov(newJoyPov)
+    OldJoyPov := newJoyPov
 }
-return
 
-; Helper subroutines. *DON'T* modify these to remap, instead just change which buttons call them
-SendConfirmKey:
-SendInput {Enter}
-return
-SendCancelKey:
-SendInput {Esc}
-return
-SendMainMenuKey:
-SendInput {NumpadSub}
-return
-SendActiveWindowKey:
-SendInput {NumpadAdd}
-return
+HandleJoyPov(joyPov) {
 
-; Gamecube Y Button (Playstation Triangle, Xbox Y Button, Nintendo X Button, TOP face button)
-Joy4::
-If WinActive("ahk_class FFXiClass") {
-  If (isLeftTriggerDown or isRightTriggerDown) {
-    SendInput {f8}
-  } else {
-    If (ButtonLayout == "GAMECUBE" or ButtonLayout == "XBOX") {
-      If (ConfirmButton == "Y") {
-        Gosub, SendConfirmKey
-      } else If (CancelButton == "Y") {
-        Gosub, SendCancelKey
-      } else If (MainMenuButton == "Y") {
-        Gosub, SendMainMenuKey
-      } else If (ActiveWindowButton == "Y") {
-        Gosub, SendActiveWindowKey
-      }
-    } else If (ButtonLayout == "PLAYSTATION") {
-      If (ConfirmButton == "TRIANGLE") {
-        Gosub, SendConfirmKey
-      } else If (CancelButton == "TRIANGLE") {
-        Gosub, SendCancelKey
-      } else If (MainMenuButton == "TRIANGLE") {
-        Gosub, SendMainMenuKey
-      } else If (ActiveWindowButton == "TRIANGLE") {
-        Gosub, SendActiveWindowKey
-      }
-    } else If (ButtonLayout == "NINTENDO") {
-      If (ConfirmButton == "X") {
-        Gosub, SendConfirmKey
-      } else If (CancelButton == "X") {
-        Gosub, SendCancelKey
-      } else If (MainMenuButton == "X") {
-        Gosub, SendMainMenuKey
-      } else If (ActiveWindowButton == "X") {
-        Gosub, SendActiveWindowKey
-      }
+    ; for testing:
+    ; SendInput("{Raw}" joyPov)
+
+    ; if (!GetIsGameWindowActive()) {
+    ;     return
+    ; }
+
+    if (GetIsXbarActive()) {
+
+        if (joyPov == XL_JoyPov_Up) {
+            SendInput("{F1}")
+        } else if (joyPov == XL_JoyPov_Down) {
+            SendInput("{F2}")
+        } else if (joyPov == XL_JoyPov_Left) {
+            SendInput("{F3}")
+        } else if (joyPov == XL_JoyPov_Right) {
+            SendInput("{F4}")
+        }
     }
-  }
 }
-return
 
-; Gamecube B Button (Playstation Square, Xbox X Button, Nintendo Y Button, LEFT face button)
-Joy3::
-If WinActive("ahk_class FFXiClass") {
-  If (isLeftTriggerDown or isRightTriggerDown) {
-    SendInput {f6}
-  } else {
-    If (ButtonLayout == "GAMECUBE") {
-      If (ConfirmButton == "B") {
-        Gosub, SendConfirmKey
-      } else If (CancelButton == "B") {
-        Gosub, SendCancelKey
-      } else If (MainMenuButton == "B") {
-        Gosub, SendMainMenuKey
-      } else If (ActiveWindowButton == "B") {
-        Gosub, SendActiveWindowKey
-      }
-    } else If (ButtonLayout == "XBOX") {
-      If (ConfirmButton == "X") {
-        Gosub, SendConfirmKey
-      } else If (CancelButton == "X") {
-        Gosub, SendCancelKey
-      } else If (MainMenuButton == "X") {
-        Gosub, SendMainMenuKey
-      } else If (ActiveWindowButton == "X") {
-        Gosub, SendActiveWindowKey
-      }
-    } else If (ButtonLayout == "PLAYSTATION") {
-      If (ConfirmButton == "SQUARE") {
-        Gosub, SendConfirmKey
-      } else If (CancelButton == "SQUARE") {
-        Gosub, SendCancelKey
-      } else If (MainMenuButton == "SQUARE") {
-        Gosub, SendMainMenuKey
-      } else If (ActiveWindowButton == "SQUARE") {
-        Gosub, SendActiveWindowKey
-      }
-    } else If (ButtonLayout == "NINTENDO") {
-      If (ConfirmButton == "Y") {
-        Gosub, SendConfirmKey
-      } else If (CancelButton == "Y") {
-        Gosub, SendCancelKey
-      } else If (MainMenuButton == "Y") {
-        Gosub, SendMainMenuKey
-      } else If (ActiveWindowButton == "Y") {
-        Gosub, SendActiveWindowKey
-      }
+HandleJoyButton(joyButton) {
+
+    ; for testing:
+    ; SendInput("{Raw}" joyButton)
+
+    ; if (!GetIsGameWindowActive()) {
+    ;     return
+    ; }
+
+    if (joyButton == FM_JoyButton_ToggleBind) {
+        SendInput("{F9}")
+    } else if (joyButton == FM_JoyButton_CycleSets) {
+        SendInput("{F10}")
+    } else if (joyButton == FM_JoyButton_XbarLeft) {
+        SendInput("{F11}")
+    } else if (joyButton == FM_JoyButton_XbarRight) {
+        SendInput("{F12}")
     }
-  }
-}
-return
 
-; Gamecube A Button (Playstation Cross, Xbox A Button, Nintendo B Button, BOTTOM face button)
-Joy1::
-If WinActive("ahk_class FFXiClass") {
-  If (isLeftTriggerDown or isRightTriggerDown) {
-    SendInput {f5}
-  } else {
-    If (ButtonLayout == "GAMECUBE" or ButtonLayout == "XBOX") {
-      If (ConfirmButton == "A") {
-        Gosub, SendConfirmKey
-      } else If (CancelButton == "A") {
-        Gosub, SendCancelKey
-      } else If (MainMenuButton == "A") {
-        Gosub, SendMainMenuKey
-      } else If (ActiveWindowButton == "A") {
-        Gosub, SendActiveWindowKey
-      }
-    } else If (ButtonLayout == "PLAYSTATION") {
-      If (ConfirmButton == "CROSS") {
-        Gosub, SendConfirmKey
-      } else If (CancelButton == "CROSS") {
-        Gosub, SendCancelKey
-      } else If (MainMenuButton == "CROSS") {
-        Gosub, SendMainMenuKey
-      } else If (ActiveWindowButton == "CROSS") {
-        Gosub, SendActiveWindowKey
-      }
-    } else If (ButtonLayout == "NINTENDO") {
-      If (ConfirmButton == "B") {
-        Gosub, SendConfirmKey
-      } else If (CancelButton == "B") {
-        Gosub, SendCancelKey
-      } else If (MainMenuButton == "B") {
-        Gosub, SendMainMenuKey
-      } else If (ActiveWindowButton == "B") {
-        Gosub, SendActiveWindowKey
-      }
+    if (GetIsXbarActive()) {
+
+        if (joyButton == XR_JoyButton_Up) {
+            SendInput("{F5}")
+        } else if (joyButton == XR_JoyButton_Down) {
+            SendInput("{F6}")
+        } else if (joyButton == XR_JoyButton_Left) {
+            SendInput("{F7}")
+        } else if (joyButton == XR_JoyButton_Right) {
+            SendInput("{F8}")
+        }
+
+    } else { ; crossbar not active
+
+        if (joyButton == FM_JoyButton_Confirm) {
+            SendInput("{Enter}")
+        } else if (joyButton == FM_JoyButton_Cancel) {
+            SendInput("{Esc}")
+        } else if (joyButton == FM_JoyButton_MainMenu) {
+            SendInput("{NumpadSub}")
+        } else if (joyButton == FM_JoyButton_ActiveWindow) {
+            SendInput("{NumpadAdd}")
+        }
+
     }
-  }
 }
-return
 
-; Gamecube X Button (Playstation Circle, Xbox B Button, Nintendo A Button, RIGHT face button)
-Joy2::
-If WinActive("ahk_class FFXiClass") {
-  If (isLeftTriggerDown or isRightTriggerDown) {
-    SendInput {f7}
-  } else {
-    If (ButtonLayout == "GAMECUBE") {
-      If (ConfirmButton == "X") {
-        Gosub, SendConfirmKey
-      } else If (CancelButton == "X") {
-        Gosub, SendCancelKey
-      } else If (MainMenuButton == "X") {
-        Gosub, SendMainMenuKey
-      } else If (ActiveWindowButton == "X") {
-        Gosub, SendActiveWindowKey
-      }
-    } else If (ButtonLayout == "XBOX") {
-      If (ConfirmButton == "B") {
-        Gosub, SendConfirmKey
-      } else If (CancelButton == "B") {
-        Gosub, SendCancelKey
-      } else If (MainMenuButton == "B") {
-        Gosub, SendMainMenuKey
-      } else If (ActiveWindowButton == "B") {
-        Gosub, SendActiveWindowKey
-      }
-    } else If (ButtonLayout == "PLAYSTATION") {
-      If (ConfirmButton == "CIRCLE") {
-        Gosub, SendConfirmKey
-      } else If (CancelButton == "CIRCLE") {
-        Gosub, SendCancelKey
-      } else If (MainMenuButton == "CIRCLE") {
-        Gosub, SendMainMenuKey
-      } else If (ActiveWindowButton == "CIRCLE") {
-        Gosub, SendActiveWindowKey
-      }
-    } else If (ButtonLayout == "NINTENDO") {
-      If (ConfirmButton == "A") {
-        Gosub, SendConfirmKey
-      } else If (CancelButton == "A") {
-        Gosub, SendCancelKey
-      } else If (MainMenuButton == "A") {
-        Gosub, SendMainMenuKey
-      } else If (ActiveWindowButton == "A") {
-        Gosub, SendActiveWindowKey
-      }
-    }
-  }
-}
-return
+{ ; REGION: JoyButton Remaps
 
-; Left Trigger
-Joy5::
-If WinActive("ahk_class FFXiClass") {
-  SendInput {Ctrl down}
-  SendInput {f11 down}
-  isLeftTriggerDown := true
-  SetTimer, WaitForButtonUp7, 10 ; Poll for button setting every 10ms
+    Joy1::HandleJoyButton(1)
+    Joy2::HandleJoyButton(2)
+    Joy3::HandleJoyButton(3)
+    Joy4::HandleJoyButton(4)
+    Joy5::HandleJoyButton(5)
+    Joy6::HandleJoyButton(6)
+    Joy7::HandleJoyButton(7)
+    Joy8::HandleJoyButton(8)
+    Joy9::HandleJoyButton(9)
+    Joy10::HandleJoyButton(10)
+    Joy11::HandleJoyButton(11)
+    Joy12::HandleJoyButton(12)
+    Joy13::HandleJoyButton(13)
+    Joy14::HandleJoyButton(14)
+    Joy15::HandleJoyButton(15)
+    Joy16::HandleJoyButton(16)
+    Joy17::HandleJoyButton(17)
+    Joy18::HandleJoyButton(18)
+    Joy19::HandleJoyButton(19)
+    Joy20::HandleJoyButton(20)
+    Joy21::HandleJoyButton(21)
+    Joy22::HandleJoyButton(22)
+    Joy23::HandleJoyButton(23)
+    Joy24::HandleJoyButton(24)
+    Joy25::HandleJoyButton(25)
+    Joy26::HandleJoyButton(26)
+    Joy27::HandleJoyButton(27)
+    Joy28::HandleJoyButton(28)
+    Joy29::HandleJoyButton(29)
+    Joy30::HandleJoyButton(30)
+    Joy31::HandleJoyButton(31)
+    Joy32::HandleJoyButton(32)
 }
-return
-
-WaitForButtonUp7:
-If WinActive("ahk_class FFXiClass") {
-  if GetKeyState("Joy5")  ; The button is still, down, so keep waiting.
-      return
-  ; Otherwise, the button has been released.
-  SendInput {f11 up}
-  if !isRightTriggerDown {
-    SendInput {Ctrl up}
-  }
-  isLeftTriggerDown := false
-  SetTimer, WaitForButtonUp7, Off ; Turn off polling
-}
-return
-
-; Right Trigger
-Joy6::
-If WinActive("ahk_class FFXiClass") {
-  SendInput {Ctrl down}
-  SendInput {f12 down}
-  isRightTriggerDown := true
-  SetTimer, WaitForButtonUp8, 10 ; Poll for button setting every 10ms
-}
-return
-
-WaitForButtonUp8:
-If WinActive("ahk_class FFXiClass") {
-  if GetKeyState("Joy6")  ; The button is still, down, so keep waiting.
-      return
-  ; Otherwise, the button has been released.
-  SendInput {f12 up}
-  if !isLeftTriggerDown {
-    SendInput {Ctrl up}
-  }
-  isRightTriggerDown := false
-  SetTimer, WaitForButtonUp8, Off ; Turn off polling
-}
-return
-
-; Opens/closes gamepad binding dialog
-Joy7::
-If WinActive("ahk_class FFXiClass") {
-  SendInput {Ctrl down}
-  SendInput {f9 down}
-  SetTimer, WaitForButtonUp9, 10 ; Poll for button setting every 10ms
-}
-return
-
-WaitForButtonUp9:
-If WinActive("ahk_class FFXiClass") {
-  if GetKeyState("Joy7")  ; The button is still, down, so keep waiting.
-      return
-  ; Otherwise, the button has been released.
-  SendInput {f9 up}
-  SendInput {Ctrl up}
-  SetTimer, WaitForButtonUp9, Off ; Turn off polling
-}
-return
-
-; Shows the environment list
-Joy8::
-If WinActive("ahk_class FFXiClass") {
-  SendInput {Ctrl down}
-  SendInput {f10 down}
-  isEnvironmentDialogOpen := true
-  SetTimer, WaitForButtonUp10, 10 ; Poll for button setting every 10ms
-}
-return
-
-WaitForButtonUp10:
-If WinActive("ahk_class FFXiClass") {
-  if GetKeyState("Joy8")  ; The button is still, down, so keep waiting.
-      return
-  ; Otherwise, the button has been released.
-  SendInput {f10 up}
-  SendInput {Ctrl up}
-  isEnvironmentDialogOpen := false
-  SetTimer, WaitForButtonUp10, Off ; Turn off polling
-}
-return

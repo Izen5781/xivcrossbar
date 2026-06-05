@@ -298,179 +298,145 @@ function action_binder:update_active_crossbar(left_trigger_just_pressed, right_t
     end
 end
 
-function action_binder:dpad_left(pressed)
+function action_binder:FM_Confirm()
+    if self.state ~= states.SELECT_BUTTON_ASSIGNMENT then
+        self:submit_selected_option()
+    end
+end
+
+function action_binder:FM_Cancel()
+    if self.state ~= states.SELECT_BUTTON_ASSIGNMENT then
+        self:go_back()
+    end
+end
+
+function action_binder:XL_Left()
+    -- TODO: replace SELECT_BUTTON_ASSIGNMENT icons with just highlighting the UI slot
+    -- TODO: replace checking pressed state here and just use shared gamepad state manager?
     if (self.state == states.SELECT_BUTTON_ASSIGNMENT) then
         self:reset_gamepad_dpad()
         self:reset_gamepad_face_buttons()
-        self.dpad_left_pressed = pressed
-        if (pressed and (self.trigger_left_pressed or self.trigger_right_pressed)) then
+        self.dpad_left_pressed = true
+        if (self.trigger_left_pressed or self.trigger_right_pressed) then
             self:show_pressed_buttons()
             self.hotkey = 1
             self:submit_selected_option()
         end
-    elseif (pressed and self.state == states.MOVE_CROSSBARS) then
+    elseif (self.state == states.MOVE_CROSSBARS) then
         self.theme_options.offset_x = self.theme_options.offset_x - 10
         self.update_offsets(self.theme_options.offset_x, self.theme_options.offset_y)
-    elseif (pressed) then
+    else
         self:decrement_col()
     end
 end
 
-function action_binder:dpad_right(pressed)
+function action_binder:XL_Down()
     if (self.state == states.SELECT_BUTTON_ASSIGNMENT) then
         self:reset_gamepad_dpad()
         self:reset_gamepad_face_buttons()
-        self.dpad_right_pressed = pressed
-        if (pressed and (self.trigger_left_pressed or self.trigger_right_pressed)) then
-            self:show_pressed_buttons()
-            self.hotkey = 3
-            self:submit_selected_option()
-        end
-    elseif (pressed and self.state == states.MOVE_CROSSBARS) then
-        self.theme_options.offset_x = self.theme_options.offset_x + 10
-        self.update_offsets(self.theme_options.offset_x, self.theme_options.offset_y)
-    elseif (pressed) then
-        self:increment_col()
-    end
-end
-
-function action_binder:dpad_down(pressed)
-    if (self.state == states.SELECT_BUTTON_ASSIGNMENT) then
-        self:reset_gamepad_dpad()
-        self:reset_gamepad_face_buttons()
-        self.dpad_down_pressed = pressed
-        if (pressed and (self.trigger_left_pressed or self.trigger_right_pressed)) then
+        self.dpad_down_pressed = true
+        if (self.trigger_left_pressed or self.trigger_right_pressed) then
             self:show_pressed_buttons()
             self.hotkey = 2
             self:submit_selected_option()
         end
-    elseif (pressed and self.state == states.MOVE_CROSSBARS) then
+    elseif (self.state == states.MOVE_CROSSBARS) then
         self.theme_options.offset_y = self.theme_options.offset_y + 10
         self.update_offsets(self.theme_options.offset_x, self.theme_options.offset_y)
-    elseif (pressed) then
+    else
         self:increment_row()
     end
 end
 
-function action_binder:dpad_up(pressed)
+function action_binder:XL_Right()
     if (self.state == states.SELECT_BUTTON_ASSIGNMENT) then
         self:reset_gamepad_dpad()
         self:reset_gamepad_face_buttons()
-        self.dpad_up_pressed = pressed
-        if (pressed and (self.trigger_left_pressed or self.trigger_right_pressed)) then
+        self.dpad_right_pressed = true
+        if (self.trigger_left_pressed or self.trigger_right_pressed) then
+            self:show_pressed_buttons()
+            self.hotkey = 3
+            self:submit_selected_option()
+        end
+    elseif (self.state == states.MOVE_CROSSBARS) then
+        self.theme_options.offset_x = self.theme_options.offset_x + 10
+        self.update_offsets(self.theme_options.offset_x, self.theme_options.offset_y)
+    else
+        self:increment_col()
+    end
+end
+
+function action_binder:XL_Up()
+    if (self.state == states.SELECT_BUTTON_ASSIGNMENT) then
+        self:reset_gamepad_dpad()
+        self:reset_gamepad_face_buttons()
+        self.dpad_up_pressed = true
+        if (self.trigger_left_pressed or self.trigger_right_pressed) then
             self:show_pressed_buttons()
             self.hotkey = 4
             self:submit_selected_option()
         end
-    elseif (pressed and self.state == states.MOVE_CROSSBARS) then
+    elseif (self.state == states.MOVE_CROSSBARS) then
         self.theme_options.offset_y = self.theme_options.offset_y - 10
         self.update_offsets(self.theme_options.offset_x, self.theme_options.offset_y)
-    elseif (pressed) then
+    else
         self:decrement_row()
     end
 end
 
-function action_binder:button_a(pressed)
+function action_binder:XR_Left()
     if (self.state == states.SELECT_BUTTON_ASSIGNMENT) then
         self:reset_gamepad_dpad()
         self:reset_gamepad_face_buttons()
-        self.button_a_pressed = pressed
-        if (pressed and (self.trigger_left_pressed or self.trigger_right_pressed)) then
-            self:show_pressed_buttons()
-            self.hotkey = 6
-            self:submit_selected_option()
-        end
-    elseif (pressed) then
-        if (self.button_layout == 'gamecube' and self.confirm_button == 'a' or
-            self.button_layout == 'playstation' and self.confirm_button == 'cross' or
-            self.button_layout == 'xbox' and self.confirm_button == 'a' or
-            self.button_layout == 'nintendo' and self.confirm_button == 'b') then
-            self:submit_selected_option()
-        elseif (self.button_layout == 'gamecube' and self.cancel_button == 'a' or
-            self.button_layout == 'playstation' and self.cancel_button == 'cross' or
-            self.button_layout == 'xbox' and self.cancel_button == 'a' or
-            self.button_layout == 'nintendo' and self.cancel_button == 'b') then
-            self:go_back()
-        end
-    end
-end
-
-function action_binder:button_b(pressed)
-    if (self.state == states.SELECT_BUTTON_ASSIGNMENT) then
-        self:reset_gamepad_dpad()
-        self:reset_gamepad_face_buttons()
-        self.button_b_pressed = pressed
-        if (pressed and (self.trigger_left_pressed or self.trigger_right_pressed)) then
+        self.button_b_pressed = true
+        if (self.trigger_left_pressed or self.trigger_right_pressed) then
             self:show_pressed_buttons()
             self.hotkey = 5
             self:submit_selected_option()
         end
-    elseif (pressed) then
-        if (self.button_layout == 'gamecube' and self.confirm_button == 'b' or
-            self.button_layout == 'playstation' and self.confirm_button == 'square' or
-            self.button_layout == 'xbox' and self.confirm_button == 'x' or
-            self.button_layout == 'nintendo' and self.confirm_button == 'y') then
+    end
+end
+
+function action_binder:XR_Down()
+    if (self.state == states.SELECT_BUTTON_ASSIGNMENT) then
+        self:reset_gamepad_dpad()
+        self:reset_gamepad_face_buttons()
+        self.button_a_pressed = true
+        if (self.trigger_left_pressed or self.trigger_right_pressed) then
+            self:show_pressed_buttons()
+            self.hotkey = 6
             self:submit_selected_option()
-        elseif (self.button_layout == 'gamecube' and self.cancel_button == 'b' or
-            self.button_layout == 'playstation' and self.cancel_button == 'square' or
-            self.button_layout == 'xbox' and self.cancel_button == 'x' or
-            self.button_layout == 'nintendo' and self.cancel_button == 'y') then
-            self:go_back()
         end
     end
 end
 
-function action_binder:button_x(pressed)
+function action_binder:XR_Right()
     if (self.state == states.SELECT_BUTTON_ASSIGNMENT) then
         self:reset_gamepad_dpad()
         self:reset_gamepad_face_buttons()
-        self.button_x_pressed = pressed
-        if (pressed and (self.trigger_left_pressed or self.trigger_right_pressed)) then
+        self.button_x_pressed = true
+        if (self.trigger_left_pressed or self.trigger_right_pressed) then
             self:show_pressed_buttons()
             self.hotkey = 7
             self:submit_selected_option()
         end
-    elseif (pressed) then
-        if (self.button_layout == 'gamecube' and self.confirm_button == 'x' or
-            self.button_layout == 'playstation' and self.confirm_button == 'circle' or
-            self.button_layout == 'xbox' and self.confirm_button == 'b' or
-            self.button_layout == 'nintendo' and self.confirm_button == 'a') then
-            self:submit_selected_option()
-        elseif (self.button_layout == 'gamecube' and self.cancel_button == 'x' or
-            self.button_layout == 'playstation' and self.cancel_button == 'circle' or
-            self.button_layout == 'xbox' and self.cancel_button == 'b' or
-            self.button_layout == 'nintendo' and self.cancel_button == 'a') then
-            self:go_back()
-        end
     end
 end
 
-function action_binder:button_y(pressed)
+function action_binder:XR_Up()
     if (self.state == states.SELECT_BUTTON_ASSIGNMENT) then
         self:reset_gamepad_dpad()
         self:reset_gamepad_face_buttons()
-        self.button_y_pressed = pressed
-        if (pressed and (self.trigger_left_pressed or self.trigger_right_pressed)) then
+        self.button_y_pressed = true
+        if (self.trigger_left_pressed or self.trigger_right_pressed) then
             self:show_pressed_buttons()
             self.hotkey = 8
             self:submit_selected_option()
         end
-    elseif (pressed) then
-        if (self.button_layout == 'gamecube' and self.confirm_button == 'y' or
-            self.button_layout == 'playstation' and self.confirm_button == 'triangle' or
-            self.button_layout == 'xbox' and self.confirm_button == 'y' or
-            self.button_layout == 'nintendo' and self.confirm_button == 'x') then
-            self:submit_selected_option()
-        elseif (self.button_layout == 'gamecube' and self.cancel_button == 'y' or
-            self.button_layout == 'playstation' and self.cancel_button == 'triangle' or
-            self.button_layout == 'xbox' and self.cancel_button == 'y' or
-            self.button_layout == 'nintendo' and self.cancel_button == 'x') then
-            self:go_back()
-        end
     end
 end
 
-function action_binder:trigger_left(pressed)
+function action_binder:FM_XbarLeft(pressed)
     if (self.state == states.SELECT_BUTTON_ASSIGNMENT) then
         local just_pressed = pressed and not self.trigger_left_pressed
         local just_released = self.trigger_left_pressed and not pressed
@@ -499,7 +465,7 @@ function action_binder:trigger_left(pressed)
     end
 end
 
-function action_binder:trigger_right(pressed)
+function action_binder:FM_XbarRight(pressed)
     if (self.state == states.SELECT_BUTTON_ASSIGNMENT) then
         local just_pressed = pressed and not self.trigger_right_pressed
         local just_released = self.trigger_right_pressed and not pressed

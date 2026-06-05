@@ -44,15 +44,36 @@ gamepad.isXR_Down = function(dik) return dik == 64 end -- F6
 gamepad.isXR_Left = function(dik) return dik == 65 end -- F7
 gamepad.isXR_Right = function(dik) return dik == 66 end -- F8
 
--- CS = CycleSets
+-- CS = CycleSets | TODO: dik should be based on setting
 gamepad.isCS_Next = function(dik) return dik == 59 end -- F1
 gamepad.isCS_Previous = function(dik) return dik == 60 end -- F2
 
--- FM = FunctionMap
+-- FM = FunctionMap | TODO: Confirm/Cancel dik should be based on setting, maybe remove their FM_ prefix?
+gamepad.isFM_Confirm = function(dik) return dik == 64 end -- F6
+gamepad.isFM_Cancel = function(dik) return dik == 66 end -- F8
 gamepad.isFM_ToggleBind = function(dik) return dik == 67 end -- F9
 gamepad.isFM_CycleSets = function(dik) return dik == 68 end -- F10
 gamepad.isFM_XbarLeft = function(dik) return dik == 87 end -- F11
 gamepad.isFM_XbarRight = function(dik) return dik == 88 end -- F12
+
+local functionKeys = {
+    [59] = true, -- F1
+    [60] = true, -- F2
+    [61] = true, -- F3
+    [62] = true, -- F4
+    [63] = true, -- F5
+    [64] = true, -- F6
+    [65] = true, -- F7
+    [66] = true, -- F8
+    [67] = true, -- F9
+    [68] = true, -- F10
+    [87] = true, -- F11
+    [88] = true, -- F12
+}
+
+function gamepad.isFunctionKey(dik)
+    return functionKeys[dik] == true
+end
 
 function gamepad.is_face_button_or_dpad(dik)
     return face_buttons[dik] ~= nil or dpad_button[dik] ~= nil

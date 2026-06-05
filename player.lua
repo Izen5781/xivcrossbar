@@ -371,7 +371,7 @@ function player:execute_action(slot)
     local h = self.hotbar_settings.active_hotbar
     local env = self.hotbar_settings.active_environment
 
-    local action = self.hotbar[env]['hotbar_' .. h]['slot_' .. slot]
+    local action = self.hotbar[env]['hotbar_' .. h]['slot_' .. slot] -- TODO: this sometime attempts to index field '?'
     local is_missing = action == nil or action.action == nil
 
     if (is_missing and env ~= 'default' and env ~= 'job-default' and env ~= 'all-jobs-default' and self.hotbar['default'] and self.hotbar['default']['hotbar_' .. h] and

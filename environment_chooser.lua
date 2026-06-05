@@ -46,6 +46,9 @@ env_chooser.disabled_slots.on_warmup = {}
 env_chooser.is_setup = false
 
 env_chooser.is_shown = false
+
+env_chooser.should_close_at = 0
+
 -----------------------------
 -- Helpers
 -----------------------------

@@ -10,26 +10,26 @@ A_HotkeyInterval := 0 ; disable hotkey rate warning
     ; to support more complex controller mappings in the future.
 
     ; XL = XbarLeft
-    XL_JoyPov_Up := IniRead("config.ini", "XbarLeft", "Dpad_Up", 0)
-    XL_JoyPov_Down := IniRead("config.ini", "XbarLeft", "Dpad_Down", 18000)
-    XL_JoyPov_Left := IniRead("config.ini", "XbarLeft", "Dpad_Left", 27000)
-    XL_JoyPov_Right := IniRead("config.ini", "XbarLeft", "Dpad_Right", 9000)
+    XL_JoyPov_Up := IniRead("config.ini", "XbarLeft", "Dpad_Up", -1)
+    XL_JoyPov_Down := IniRead("config.ini", "XbarLeft", "Dpad_Down", -1)
+    XL_JoyPov_Left := IniRead("config.ini", "XbarLeft", "Dpad_Left", -1)
+    XL_JoyPov_Right := IniRead("config.ini", "XbarLeft", "Dpad_Right", -1)
 
     ; XR = XbarRight
-    XR_JoyButton_Up := IniRead("config.ini", "XbarRight", "Button_Up", 0)
-    XR_JoyButton_Down := IniRead("config.ini", "XbarRight", "Button_Down", 0)
-    XR_JoyButton_Left := IniRead("config.ini", "XbarRight", "Button_Left", 0)
-    XR_JoyButton_Right := IniRead("config.ini", "XbarRight", "Button_Right", 0)
+    XR_JoyButton_Up := IniRead("config.ini", "XbarRight", "Button_Up", -1)
+    XR_JoyButton_Down := IniRead("config.ini", "XbarRight", "Button_Down", -1)
+    XR_JoyButton_Left := IniRead("config.ini", "XbarRight", "Button_Left", -1)
+    XR_JoyButton_Right := IniRead("config.ini", "XbarRight", "Button_Right", -1)
 
     ; FM = FunctionMap
-    FM_JoyButton_Confirm := IniRead("config.ini", "FunctionMap", "Button_Confirm", 0)
-    FM_JoyButton_Cancel := IniRead("config.ini", "FunctionMap", "Button_Cancel", 0)
-    FM_JoyButton_MainMenu := IniRead("config.ini", "FunctionMap", "Button_MainMenu", 0)
-    FM_JoyButton_ActiveWindow := IniRead("config.ini", "FunctionMap", "Button_ActiveWindow", 0)
-    FM_JoyButton_ToggleBind := IniRead("config.ini", "FunctionMap", "Button_ToggleBind", 0)
-    FM_JoyButton_CycleSets := IniRead("config.ini", "FunctionMap", "Button_CycleSets", 0)
-    FM_JoyButton_XbarLeft := IniRead("config.ini", "FunctionMap", "Button_XbarLeft", 0)
-    FM_JoyButton_XbarRight := IniRead("config.ini", "FunctionMap", "Button_XbarRight", 0)
+    FM_JoyButton_Confirm := IniRead("config.ini", "FunctionMap", "Button_Confirm", -1)
+    FM_JoyButton_Cancel := IniRead("config.ini", "FunctionMap", "Button_Cancel", -1)
+    FM_JoyButton_MainMenu := IniRead("config.ini", "FunctionMap", "Button_MainMenu", -1)
+    FM_JoyButton_ActiveWindow := IniRead("config.ini", "FunctionMap", "Button_ActiveWindow", -1)
+    FM_JoyButton_ToggleBind := IniRead("config.ini", "FunctionMap", "Button_ToggleBind", -1)
+    FM_JoyButton_CycleSets := IniRead("config.ini", "FunctionMap", "Button_CycleSets", -1)
+    FM_JoyButton_XbarLeft := IniRead("config.ini", "FunctionMap", "Button_XbarLeft", -1)
+    FM_JoyButton_XbarRight := IniRead("config.ini", "FunctionMap", "Button_XbarRight", -1)
 }
 
 SetTimer(CheckJoyPov, 10) ; poll for D-pad changes every 10ms

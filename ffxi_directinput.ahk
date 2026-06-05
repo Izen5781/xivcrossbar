@@ -10,10 +10,10 @@ A_HotkeyInterval := 0 ; disable hotkey rate warning
     ; to support more complex controller mappings in the future.
 
     ; XL = XbarLeft
-    XL_JoyPov_Up := IniRead("config.ini", "XbarLeft", "Dpad_Up", -1)
-    XL_JoyPov_Down := IniRead("config.ini", "XbarLeft", "Dpad_Down", -1)
-    XL_JoyPov_Left := IniRead("config.ini", "XbarLeft", "Dpad_Left", -1)
-    XL_JoyPov_Right := IniRead("config.ini", "XbarLeft", "Dpad_Right", -1)
+    XL_JoyPov_Up := IniRead("config.ini", "XbarLeft", "POV_Up", -1)
+    XL_JoyPov_Down := IniRead("config.ini", "XbarLeft", "POV_Down", -1)
+    XL_JoyPov_Left := IniRead("config.ini", "XbarLeft", "POV_Left", -1)
+    XL_JoyPov_Right := IniRead("config.ini", "XbarLeft", "POV_Right", -1)
 
     ; XR = XbarRight
     XR_JoyButton_Up := IniRead("config.ini", "XbarRight", "Button_Up", -1)

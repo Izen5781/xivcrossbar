@@ -10,38 +10,41 @@ A_HotkeyInterval := 0 ; disable hotkey rate warning
     ; to support more complex controller mappings in the future.
 
     ; XL = XbarLeft
-    XL_JoyPov_Up := IniRead("config.ini", "XbarLeft", "POV_Up", -1)
-    XL_JoyPov_Down := IniRead("config.ini", "XbarLeft", "POV_Down", -1)
-    XL_JoyPov_Left := IniRead("config.ini", "XbarLeft", "POV_Left", -1)
-    XL_JoyPov_Right := IniRead("config.ini", "XbarLeft", "POV_Right", -1)
+    XL_JoyPov_Up := IniRead("config.ini", "XbarLeft", "POV_Up", "NOTSET")
+    XL_JoyPov_Down := IniRead("config.ini", "XbarLeft", "POV_Down", "NOTSET")
+    XL_JoyPov_Left := IniRead("config.ini", "XbarLeft", "POV_Left", "NOTSET")
+    XL_JoyPov_Right := IniRead("config.ini", "XbarLeft", "POV_Right", "NOTSET")
 
     ; XR = XbarRight
-    XR_JoyButton_Up := IniRead("config.ini", "XbarRight", "Button_Up", -1)
-    XR_JoyButton_Down := IniRead("config.ini", "XbarRight", "Button_Down", -1)
-    XR_JoyButton_Left := IniRead("config.ini", "XbarRight", "Button_Left", -1)
-    XR_JoyButton_Right := IniRead("config.ini", "XbarRight", "Button_Right", -1)
+    XR_JoyButton_Up := IniRead("config.ini", "XbarRight", "Button_Up", "NOTSET")
+    XR_JoyButton_Down := IniRead("config.ini", "XbarRight", "Button_Down", "NOTSET")
+    XR_JoyButton_Left := IniRead("config.ini", "XbarRight", "Button_Left", "NOTSET")
+    XR_JoyButton_Right := IniRead("config.ini", "XbarRight", "Button_Right", "NOTSET")
+
+    ; CS = CycleSets
+    CS_JoyPov_Next := IniRead("config.ini", "CycleSets", "POV_Next", "NOTSET")
+    CS_JoyPov_Previous := IniRead("config.ini", "CycleSets", "POV_Previous", "NOTSET")
 
     ; FM = FunctionMap
-    FM_JoyButton_Confirm := IniRead("config.ini", "FunctionMap", "Button_Confirm", -1)
-    FM_JoyButton_Cancel := IniRead("config.ini", "FunctionMap", "Button_Cancel", -1)
-    FM_JoyButton_MainMenu := IniRead("config.ini", "FunctionMap", "Button_MainMenu", -1)
-    FM_JoyButton_ActiveWindow := IniRead("config.ini", "FunctionMap", "Button_ActiveWindow", -1)
-    FM_JoyButton_ToggleBind := IniRead("config.ini", "FunctionMap", "Button_ToggleBind", -1)
-    FM_JoyButton_CycleSets := IniRead("config.ini", "FunctionMap", "Button_CycleSets", -1)
-    FM_JoyButton_XbarLeft := IniRead("config.ini", "FunctionMap", "Button_XbarLeft", -1)
-    FM_JoyButton_XbarRight := IniRead("config.ini", "FunctionMap", "Button_XbarRight", -1)
+    FM_JoyButton_Confirm := IniRead("config.ini", "FunctionMap", "Button_Confirm", "NOTSET")
+    FM_JoyButton_Cancel := IniRead("config.ini", "FunctionMap", "Button_Cancel", "NOTSET")
+    FM_JoyButton_MainMenu := IniRead("config.ini", "FunctionMap", "Button_MainMenu", "NOTSET")
+    FM_JoyButton_ActiveWindow := IniRead("config.ini", "FunctionMap", "Button_ActiveWindow", "NOTSET")
+    FM_JoyButton_ToggleBind := IniRead("config.ini", "FunctionMap", "Button_ToggleBind", "NOTSET")
+    FM_JoyButton_CycleSets := IniRead("config.ini", "FunctionMap", "Button_CycleSets", "NOTSET")
+    FM_JoyButton_XbarLeft := IniRead("config.ini", "FunctionMap", "Button_XbarLeft", "NOTSET")
+    FM_JoyButton_XbarRight := IniRead("config.ini", "FunctionMap", "Button_XbarRight", "NOTSET")
 }
 
 SetTimer(CheckJoyPov, 10) ; poll for D-pad changes every 10ms
 OldJoyPov := -1 ; -1 = center position (no angle to report)
 
-GetIsGameWindowActive() {
-    WinActive("ahk_class FFXiClass")
-}
+FM_CycleSets_IsPressed := false
+FM_XbarLeft_IsPressed := false
+FM_XbarRight_IsPressed := false
 
-GetIsXbarActive() {
-    return GetKeyState("Joy" FM_JoyButton_XbarLeft)
-        or GetKeyState("Joy" FM_JoyButton_XbarRight)
+GetIsGameWindowActive() {
+    return WinActive("ahk_class FFXiClass")
 }
 
 CheckJoyPov() {
@@ -64,20 +67,28 @@ HandleJoyPov(joyPov) {
     ; for testing:
     ; SendInput("{Raw}" joyPov)
 
-    ; if (!GetIsGameWindowActive()) {
-    ;     return
-    ; }
+    if (!GetIsGameWindowActive()) {
+        return
+    }
 
-    if (GetIsXbarActive()) {
+    if (FM_XbarLeft_IsPressed or FM_XbarRight_IsPressed) {
 
         if (joyPov == XL_JoyPov_Up) {
-            SendInput("{F1}")
+            Send_XL_Up()
         } else if (joyPov == XL_JoyPov_Down) {
-            SendInput("{F2}")
+            Send_XL_Down()
         } else if (joyPov == XL_JoyPov_Left) {
-            SendInput("{F3}")
+            Send_XL_Left()
         } else if (joyPov == XL_JoyPov_Right) {
-            SendInput("{F4}")
+            Send_XL_Right()
+        }
+
+    } else if (FM_CycleSets_IsPressed) {
+
+        if (joyPov == CS_JoyPov_Next) {
+            Send_CS_Next()
+        } else if (joyPov == CS_JoyPov_Previous) {
+            Send_CS_Previous()
         }
     }
 }
@@ -87,44 +98,184 @@ HandleJoyButton(joyButton) {
     ; for testing:
     ; SendInput("{Raw}" joyButton)
 
-    ; if (!GetIsGameWindowActive()) {
-    ;     return
-    ; }
-
-    if (joyButton == FM_JoyButton_ToggleBind) {
-        SendInput("{F9}")
-    } else if (joyButton == FM_JoyButton_CycleSets) {
-        SendInput("{F10}")
-    } else if (joyButton == FM_JoyButton_XbarLeft) {
-        SendInput("{F11}")
-    } else if (joyButton == FM_JoyButton_XbarRight) {
-        SendInput("{F12}")
+    if (!GetIsGameWindowActive()) {
+        return
     }
 
-    if (GetIsXbarActive()) {
+    if (joyButton == FM_JoyButton_ToggleBind) {
+        Send_FM_ToggleBind()
+    } else if (joyButton == FM_JoyButton_CycleSets) {
+        Send_FM_CycleSets_Press("Joy" joyButton, true)
+    } else if (joyButton == FM_JoyButton_XbarLeft) {
+        Send_FM_XbarLeft_Press("Joy" joyButton, true)
+    } else if (joyButton == FM_JoyButton_XbarRight) {
+        Send_FM_XbarRight_Press("Joy" joyButton, true)
+    }
+
+    if (FM_XbarLeft_IsPressed or FM_XbarRight_IsPressed) {
 
         if (joyButton == XR_JoyButton_Up) {
-            SendInput("{F5}")
+            Send_XR_Up()
         } else if (joyButton == XR_JoyButton_Down) {
-            SendInput("{F6}")
+            Send_XR_Down()
         } else if (joyButton == XR_JoyButton_Left) {
-            SendInput("{F7}")
+            Send_XR_Left()
         } else if (joyButton == XR_JoyButton_Right) {
-            SendInput("{F8}")
+            Send_XR_Right()
         }
 
     } else { ; crossbar not active
 
         if (joyButton == FM_JoyButton_Confirm) {
-            SendInput("{Enter}")
+            Send_FM_Confirm()
         } else if (joyButton == FM_JoyButton_Cancel) {
-            SendInput("{Esc}")
+            Send_FM_Cancel()
         } else if (joyButton == FM_JoyButton_MainMenu) {
-            SendInput("{NumpadSub}")
+            Send_FM_MainMenu()
         } else if (joyButton == FM_JoyButton_ActiveWindow) {
-            SendInput("{NumpadAdd}")
+            Send_FM_ActiveWindow()
+        }
+    }
+}
+
+{ ; REGION: SendInputs
+
+    Send_XL_Up()
+    {
+        SendInput("^{F1}")
+    }
+
+    Send_XL_Down()
+    {
+        SendInput("^{F2}")
+    }
+
+    Send_XL_Left()
+    {
+        SendInput("^{F3}")
+    }
+
+    Send_XL_Right()
+    {
+        SendInput("^{F4}")
+    }
+
+    Send_XR_Up()
+    {
+        SendInput("^{F5}")
+    }
+
+    Send_XR_Down()
+    {
+        SendInput("^{F6}")
+    }
+
+    Send_XR_Left()
+    {
+        SendInput("^{F7}")
+    }
+
+    Send_XR_Right()
+    {
+        SendInput("^{F8}")
+    }
+
+    Send_CS_Next()
+    {
+        SendInput("^{F1}")
+    }
+
+    Send_CS_Previous()
+    {
+        SendInput("^{F2}")
+    }
+
+    Send_FM_Confirm()
+    {
+        SendInput("{Enter}")
+    }
+
+    Send_FM_Cancel()
+    {
+        SendInput("{Esc}")
+    }
+
+    Send_FM_MainMenu()
+    {
+        SendInput("{NumpadSub}")
+    }
+
+    Send_FM_ActiveWindow()
+    {
+        SendInput("{NumpadAdd}")
+    }
+
+    Send_FM_ToggleBind()
+    {
+        SendInput("^{F9}")
+    }
+
+    Send_FM_CycleSets_Press(keyName, releaseState)
+    {
+        global FM_CycleSets_KeyName := keyName
+        global FM_CycleSets_PressedState := releaseState
+        global FM_CycleSets_IsPressed := true
+
+        SendInput("^{F10 down}")
+        SetTimer(Send_FM_CycleSets_Release, 10)
+    }
+
+    Send_FM_CycleSets_Release()
+    {
+        if (GetKeyState(FM_CycleSets_KeyName) == FM_CycleSets_PressedState) {
+            return
         }
 
+        global FM_CycleSets_IsPressed := false
+        SendInput("^{F10 up}")
+        SetTimer(, 0) ; stop polling
+    }
+
+    Send_FM_XbarLeft_Press(keyName, releaseState)
+    {
+        global FM_XbarLeft_KeyName := keyName
+        global FM_XbarLeft_PressedState := releaseState
+        global FM_XbarLeft_IsPressed := true
+
+        SendInput("^{F11 down}")
+        SetTimer(Send_FM_XbarLeft_Release, 10)
+    }
+
+    Send_FM_XbarLeft_Release()
+    {
+        if (GetKeyState(FM_XbarLeft_KeyName) == FM_XbarLeft_PressedState) {
+            return
+        }
+
+        global FM_XbarLeft_IsPressed := false
+        SendInput("^{F11 up}")
+        SetTimer(, 0) ; stop polling
+    }
+
+    Send_FM_XbarRight_Press(keyName, releaseState)
+    {
+        global FM_XbarRight_KeyName := keyName
+        global FM_XbarRight_PressedState := releaseState
+        global FM_XbarRight_IsPressed := true
+
+        SendInput("^{F12 down}")
+        SetTimer(Send_FM_XbarRight_Release, 10)
+    }
+
+    Send_FM_XbarRight_Release()
+    {
+        if (GetKeyState(FM_XbarRight_KeyName) == FM_XbarRight_PressedState) {
+            return
+        }
+
+        global FM_XbarRight_IsPressed := false
+        SendInput("^{F12 up}")
+        SetTimer(, 0) ; stop polling
     }
 }
 

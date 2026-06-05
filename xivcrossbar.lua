@@ -759,7 +759,7 @@ windower.register_event('keyboard', function(dik, pressed, flags, blocked)
 
                 if (gamepad.isFM_Confirm(dik)) then
                     action_binder:FM_Confirm()
-                elseif (gamepad.isFM_Confirm(dik)) then
+                elseif (gamepad.isFM_Cancel(dik)) then
                     action_binder:FM_Cancel()
                 end
 

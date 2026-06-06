@@ -1,6 +1,9 @@
 require("lists")
 require("tables")
 
+-- TODO: ViewMap button is incorrectly sized/placed
+-- TODO: generated .xml files have extra <slot9> for some reason, and extra line breaks
+
 local mount_roulette = require('libs/mountroulette/mountroulette')
 local icon_extractor = require('ui/icon_extractor')
 local kebab_casify = require('libs/kebab_casify')

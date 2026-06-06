@@ -78,26 +78,19 @@ local gamepad_converter = require('gamepad_converter')
 local gamepad_state = {
     ahkCtrl_IsPressed = false,
     ahkAlt_IsPressed = false,
+    xbarChain = "", -- L, R, LR, RL, LL, RR
+    isLeftDoublePressWindowOpen = false,
+    isRightDoublePressWindowOpen = false,
 }
-gamepad_state.left_trigger = false
-gamepad_state.left_trigger_doublepress = false
-gamepad_state.right_trigger = false
-gamepad_state.right_trigger_doublepress = false
 gamepad_state.active_bar = 0
 local ui_dirty = false
-local left_trigger_lifted_during_doublepress_window = false
-local right_trigger_lifted_during_doublepress_window = false
-local is_left_doublepress_window_open = false
-local is_right_doublepress_window_open = false
 
-local function close_left_doublepress_window()
-    is_left_doublepress_window_open = false
-    left_trigger_lifted_during_doublepress_window = false
+local function closeLeftDoublePressWindow()
+    gamepad_state.isLeftDoublePressWindowOpen = false
 end
 
-local function close_right_doublepress_window()
-    is_right_doublepress_window_open = false
-    right_trigger_lifted_during_doublepress_window = false
+local function closeRightDoublePressWindow()
+    gamepad_state.isRightDoublePressWindowOpen = false
 end
 
 -- command to set a crossbar action in action_binder
@@ -227,6 +220,7 @@ end
 
 -- change active hotbar
 function change_active_hotbar(new_hotbar)
+    gamepad_state.active_bar = new_hotbar
     player:change_active_hotbar(new_hotbar)
 end
 
@@ -523,60 +517,88 @@ windower.register_event('addon command', function(command, ...)
     end
 end)
 
--- https://community.bistudio.com/wiki/DIK_KeyCodes
-local keys = {
-    [2] = '1',
-    [3] = '2',
-    [4] = '3',
-    [5] = '4',
-    [6] = '5',
-    [7] = '6',
-    [8] = '7',
-    [9] = '8',
-    [10] = '9',
-    [11] = '0',
-    [12] = '-',
-    [30] = 'A',
-    [48] = 'B',
-    [46] = 'C',
-    [32] = 'D',
-    [18] = 'E',
-    [33] = 'F',
-    [34] = 'G',
-    [35] = 'H',
-    [23] = 'I',
-    [36] = 'J',
-    [37] = 'K',
-    [38] = 'L',
-    [50] = 'M',
-    [49] = 'N',
-    [24] = 'O',
-    [25] = 'P',
-    [16] = 'Q',
-    [19] = 'R',
-    [31] = 'S',
-    [20] = 'T',
-    [22] = 'U',
-    [47] = 'V',
-    [17] = 'W',
-    [45] = 'X',
-    [21] = 'Y',
-    [44] = 'Z'
-}
+local function updateXbarChain(dik, pressed)
 
-local function getShiftPressed(flags)
+    if gamepad.isFM_XbarLeft(dik) then
 
-    -- This lua version does not seem to support bitwise operators.
-    -- flags: 1 = shift, 2 = alt, 4 = ctrl
-    -- 1/3/5/7 = shift
-    -- 2/3/6/7 = alt
-    -- 4/5/6/7 = ctrl
+        if pressed then
 
-    return flags % 2 == 1
+            if gamepad_state.FM_XbarRight_IsPressed then
+                gamepad_state.xbarChain = "RL"
+
+            elseif gamepad_state.isLeftDoublePressWindowOpen then
+                gamepad_state.isLeftDoublePressWindowOpen = false
+                gamepad_state.xbarChain = "LL"
+
+            else -- only this FM_Xbar is pressed
+                ---@diagnostic disable-next-line: undefined-field
+                coroutine.schedule(closeLeftDoublePressWindow, 0.5)
+                gamepad_state.isLeftDoublePressWindowOpen = true
+                gamepad_state.xbarChain = "L"
+            end
+
+        else -- released
+
+            if gamepad_state.FM_XbarRight_IsPressed then
+                gamepad_state.xbarChain = "R"
+            else -- neither FM_Xbar pressed
+                gamepad_state.xbarChain = ""
+            end
+
+        end
+
+    elseif gamepad.isFM_XbarRight(dik) then
+
+        if pressed then
+
+            if gamepad_state.FM_XbarLeft_IsPressed then
+                gamepad_state.xbarChain = "LR"
+
+            elseif gamepad_state.isRightDoublePressWindowOpen then
+                gamepad_state.isRightDoublePressWindowOpen = false
+                gamepad_state.xbarChain = "RR"
+
+            else -- only this FM_Xbar is pressed
+                ---@diagnostic disable-next-line: undefined-field
+                coroutine.schedule(closeRightDoublePressWindow, 0.5)
+                gamepad_state.isRightDoublePressWindowOpen = true
+                gamepad_state.xbarChain = "R"
+            end
+
+        else -- released
+
+            if gamepad_state.FM_XbarLeft_IsPressed then
+                gamepad_state.xbarChain = "L"
+            else -- neither FM_Xbar pressed
+                gamepad_state.xbarChain = ""
+            end
+
+        end
+
+    else return false end -- no change
+
+    local max = theme_options.hotbar_number
+
+    if gamepad_state.xbarChain == "" then
+        change_active_hotbar(0)
+    elseif gamepad_state.xbarChain == "L" then
+        change_active_hotbar(1)
+    elseif gamepad_state.xbarChain == "R" then
+        change_active_hotbar(2)
+    elseif gamepad_state.xbarChain == "LR" then
+        change_active_hotbar(max >= 3 and 3 or 0)
+    elseif gamepad_state.xbarChain == "RL" then
+        change_active_hotbar(max >= 4 and 4 or 3)
+    elseif gamepad_state.xbarChain == "LL" then
+        change_active_hotbar(max >= 5 and 5 or 1)
+    elseif gamepad_state.xbarChain == "RR" then
+        change_active_hotbar(max >= 6 and 6 or 2)
+    end
+
+    return true
 
 end
 
--- ON KEY
 windower.register_event('keyboard', function(dik, pressed, flags, blocked)
 
     -- AutoHotkey SendInput("^{F1 up}") is sent as "{Ctrl down}{F1 up}{Ctrl up}".
@@ -584,145 +606,49 @@ windower.register_event('keyboard', function(dik, pressed, flags, blocked)
     -- FFXI interprets this as Ctrl+F1, but Windower interprets it as just F1.
     -- It looks like Windower relies on the event flags but FFXI does not.
 
+    -- Windower documentation states that returning true will prevent the keyboard
+    -- action from reaching the game. In reality, returning true changes nothing.
+    -- https://github.com/Windower/Lua/wiki/Events
+
+    -- This lua version does not seem to support bitwise operators.
+    -- flags: 1 = shift, 2 = alt, 4 = ctrl
+    -- 1/3/5/7 = shift
+    -- 2/3/6/7 = alt
+    -- 4/5/6/7 = ctrl
+
     -- for testing:
-    windower.send_command(string.format(
-        "echo dik: %s | pressed: %s | flags: %s | blocked %s",
-        dik, tostring(pressed), flags, tostring(blocked)))
+    -- windower.send_command(string.format(
+    --     "echo dik: %s | pressed: %s | flags: %s | blocked %s",
+    --     dik, tostring(pressed), flags, tostring(blocked)))
 
-    -- TODO
-    -- Can tell when a Ctrl or Shift input is coming from AutoHotkey when the input does not have flags.
-    -- Ignore function keys if they have flags (or most input for that matter), env_chooser is the exception (for entering hotbar set name)
-    -- Ignore function keys (or most inputs for that matter) if not immediately preceeded by flagless modifier keys
+    if flags ~= 0 then return end -- all AutoHotkey input is sent without flags
 
-    if gamepad.isFunctionKey(dik) and gamepad_state.ahkAlt_IsPressed then
-        pressed = true
+    if dik == keyboard.ctrl then gamepad_state.ahkCtrl_IsPressed = pressed
+    elseif dik == keyboard.alt then gamepad_state.ahkAlt_IsPressed = pressed end
+
+    if not gamepad.isFunctionKey(dik) then return end -- remaining logic only cares about F1-F12
+    if not gamepad_state.ahkCtrl_IsPressed then return end -- AutoHotkey always sends Alt before F1-F12
+    if pressed then return end -- AutoHotkey always sends F1-F12 as keyup events
+
+    -- AutoHotkey sends F1-F12 as keyup events to avoid interfering with normal functionality.
+    -- Most keys are are "clicked", and only one event is needed to trigger the desired result.
+    -- For keys that can be held and later released, Alt is sent when the key is being released.
+    pressed = not gamepad_state.ahkAlt_IsPressed
+
+    local xbarChainChanged = updateXbarChain(dik, pressed)
+    if xbarChainChanged then ui_dirty = true end
+
+    if gamepad.isFM_XbarLeft(dik) then
+        gamepad_state.FM_XbarLeft_IsPressed = pressed
+    elseif gamepad.isFM_XbarRight(dik) then
+        gamepad_state.FM_XbarRight_IsPressed = pressed
+    elseif gamepad.isFM_CycleSets(dik) then
+        gamepad_state.FM_CycleSets_IsPressed = pressed
     end
 
-    local left_trigger_just_pressed = pressed and gamepad.isFM_XbarLeft(dik) and not gamepad_state.left_trigger
-    local right_trigger_just_pressed = pressed and gamepad.isFM_XbarRight(dik) and not gamepad_state.right_trigger
-    local left_trigger_just_released = (not pressed) and gamepad.isFM_XbarLeft(dik) and gamepad_state.left_trigger
-    local right_trigger_just_released = (not pressed) and gamepad.isFM_XbarRight(dik) and gamepad_state.right_trigger
+    -- TODO: for action binding, first Xbar event indicates the key being used to bind.
 
-    ui_dirty = left_trigger_just_pressed or right_trigger_just_pressed or left_trigger_just_released or right_trigger_just_released
-
-    if (gamepad.isFM_XbarLeft(dik)) then
-        gamepad_state.left_trigger = pressed
-    elseif (gamepad.isFM_XbarRight(dik)) then
-        gamepad_state.right_trigger = pressed
-    elseif (dik == keyboard.ctrl) then
-        gamepad_state.capturing = pressed
-        if flags == 0 then gamepad_state.ahkCtrl_IsPressed = pressed end
-    elseif (dik == keyboard.alt) then
-        if flags == 0 then gamepad_state.ahkAlt_IsPressed = pressed end
-    elseif (gamepad.isFM_CycleSets(dik)) then
-        gamepad_state.plus_button = pressed
-    end
-
-    local only_left_trigger_just_pressed = left_trigger_just_pressed and not gamepad_state.right_trigger
-    if (not is_left_doublepress_window_open and only_left_trigger_just_pressed) then
-        is_left_doublepress_window_open = true
-        is_right_doublepress_window_open = false
-        coroutine.schedule(close_left_doublepress_window, 0.5)
-    end
-    local only_right_trigger_just_pressed = right_trigger_just_pressed and not gamepad_state.left_trigger
-    if (not is_right_doublepress_window_open and only_right_trigger_just_pressed) then
-        is_right_doublepress_window_open = true
-        is_left_doublepress_window_open = false
-        coroutine.schedule(close_right_doublepress_window, 0.5)
-    end
-
-    local only_left_trigger_just_released = left_trigger_just_released and not gamepad_state.right_trigger
-    if (is_left_doublepress_window_open and only_left_trigger_just_released) then
-        left_trigger_lifted_during_doublepress_window = true
-    end
-    local only_right_trigger_just_released = right_trigger_just_released and not gamepad_state.left_trigger
-    if (is_right_doublepress_window_open and only_right_trigger_just_released) then
-        right_trigger_lifted_during_doublepress_window = true
-    end
-
-    if (only_left_trigger_just_pressed and is_left_doublepress_window_open and left_trigger_lifted_during_doublepress_window) then
-        gamepad_state.left_trigger_doublepress = true
-        is_left_doublepress_window_open = false
-    end
-    if (only_right_trigger_just_pressed and is_right_doublepress_window_open and right_trigger_lifted_during_doublepress_window) then
-        gamepad_state.right_trigger_doublepress = true
-        is_right_doublepress_window_open = false
-    end
-
-    if (left_trigger_just_released and gamepad_state.left_trigger_doublepress) then
-        gamepad_state.left_trigger_doublepress = false
-    end
-    if (right_trigger_just_released and gamepad_state.right_trigger_doublepress) then
-        gamepad_state.right_trigger_doublepress = false
-    end
-
-    -- windower.send_command('@input /echo '..dik)
-
-    if (env_chooser.capturing and keys[dik] ~= nil) then
-        if (pressed) then
-            -- TODO: this user experience is super jank
-            -- probably force players to add new sets via console commands
-            -- just update text in popup to say 'use "//xb new <crossbar set name>" to add new crossbar set'
-            -- probably need to shorten to: use "//xb new <name>"
-            if (getShiftPressed(flags)) then
-                env_chooser:send_key(keys[dik])
-            else
-                env_chooser:send_key(keys[dik]:lower())
-            end
-        end
-        return true
-    elseif (env_chooser.capturing and dik == keyboard.backspace and pressed) then
-        env_chooser:send_backspace()
-    elseif (env_chooser.capturing and dik == keyboard.esc and pressed) then
-        local next_environment = env_chooser:get_next_environment(player.hotbar, player.hotbar_settings.active_environment)
-        set_active_environment(next_environment)
-        env_chooser:send_escape()
-    elseif (env_chooser.capturing and dik == keyboard.enter and pressed) then
-        if (env_chooser:validate_new_set_name()) then
-            new_environment_command(L{env_chooser:get_new_set_name()})
-            env_chooser:clear()
-        else
-            windower.send_command('input /echo [XIVCrossbar] Crossbar set name "' .. env_chooser:get_new_set_name() .. '" is reserved. Unable to create.')
-        end
-        return true
-    end
-
-    if (gamepad_state.capturing and gamepad_state.left_trigger and not gamepad_state.right_trigger) then
-        if (gamepad_state.left_trigger_doublepress and theme_options.hotbar_number >= 5) then
-            change_active_hotbar(5)
-            gamepad_state.active_bar = 5
-        else
-            change_active_hotbar(1)
-            gamepad_state.active_bar = 1
-        end
-    elseif (gamepad_state.capturing and gamepad_state.right_trigger and not gamepad_state.left_trigger) then
-        if (gamepad_state.right_trigger_doublepress and theme_options.hotbar_number >= 6) then
-            change_active_hotbar(6)
-            gamepad_state.active_bar = 6
-        else
-            change_active_hotbar(2)
-            gamepad_state.active_bar = 2
-        end
-    elseif (gamepad_state.capturing and gamepad_state.right_trigger and gamepad_state.left_trigger) then
-        if (theme_options.hotbar_number > 3) then
-            if (left_trigger_just_pressed) then
-                -- R -> L = bar 3
-                change_active_hotbar(3)
-                gamepad_state.active_bar = 3
-            elseif (right_trigger_just_pressed) then
-                -- L -> R = bar 4
-                change_active_hotbar(4)
-                gamepad_state.active_bar = 4
-            end
-        else
-            change_active_hotbar(3)
-            gamepad_state.active_bar = 3
-        end
-    else
-        gamepad_state.active_bar = 0
-    end
-
-    if (gamepad_state.capturing and gamepad.isFM_ToggleBind(dik)) then
+    if (gamepad.isFM_ToggleBind(dik)) then
         if (action_binder.is_hidden) then
             action_binder:show()
             ui:hide_button_hints()
@@ -736,73 +662,55 @@ windower.register_event('keyboard', function(dik, pressed, flags, blocked)
         return true
     end
 
-    -- TODO: This does not work as expected
-    -- if (not action_binder.is_hidden) then
-    --     -- TODO: move this logic much earlier (before early out if Ctrl not pressed)
-    --     -- TODO: return true after this logic
-    --     if (gamepad.isFM_Confirm(dik)) then
-    --         action_binder:FM_Confirm()
-    --     elseif (gamepad.isFM_Cancel(dik)) then
-    --         action_binder:FM_Cancel()
-    --     end
-
-    --     if not gamepad.isFunctionKey(dik) then
-    --         windower.send_command(string.format("echo dik: %s | supressed", dik))
-    --         return true -- this does not work as the documentation describes (input still reaches game)
-    --     end
-    -- end
-
     if (not action_binder.is_hidden) then
-        if (gamepad_state.capturing) then
-            if (gamepad.is_face_button_or_dpad(dik)) then
-                local action_binder_was_showing = not action_binder.is_hidden
+        if (gamepad.is_face_button_or_dpad(dik)) then
+            local action_binder_was_showing = not action_binder.is_hidden
 
-                if (gamepad.isFM_Confirm(dik)) then
-                    action_binder:FM_Confirm()
-                elseif (gamepad.isFM_Cancel(dik)) then
-                    action_binder:FM_Cancel()
-                end
-
-                if (gamepad.isXL_Left(dik)) then
-                    action_binder:XL_Left()
-                elseif (gamepad.isXL_Down(dik)) then
-                    action_binder:XL_Down()
-                elseif (gamepad.isXL_Right(dik)) then
-                    action_binder:XL_Right()
-                elseif (gamepad.isXL_Up(dik)) then
-                    action_binder:XL_Up()
-                elseif (gamepad.isXR_Left(dik)) then
-                    action_binder:XR_Left()
-                elseif (gamepad.isXR_Down(dik)) then
-                    action_binder:XR_Down()
-                elseif (gamepad.isXR_Right(dik)) then
-                    action_binder:XR_Right()
-                elseif (gamepad.isXR_Up(dik)) then
-                    action_binder:XR_Up()
-                end
-
-                if (action_binder_was_showing and action_binder.is_hidden) then
-                    ui:maybe_show_button_hints()
-                end
-                return true
+            if (gamepad.isFM_Confirm(dik)) then
+                action_binder:FM_Confirm()
+            elseif (gamepad.isFM_Cancel(dik)) then
+                action_binder:FM_Cancel()
             end
 
-            if (gamepad.isFM_XbarLeft(dik)) then
-                action_binder:FM_XbarLeft(pressed)
-            elseif (gamepad.isFM_XbarRight(dik)) then
-                action_binder:FM_XbarRight(pressed)
+            if (gamepad.isXL_Left(dik)) then
+                action_binder:XL_Left()
+            elseif (gamepad.isXL_Down(dik)) then
+                action_binder:XL_Down()
+            elseif (gamepad.isXL_Right(dik)) then
+                action_binder:XL_Right()
+            elseif (gamepad.isXL_Up(dik)) then
+                action_binder:XL_Up()
+            elseif (gamepad.isXR_Left(dik)) then
+                action_binder:XR_Left()
+            elseif (gamepad.isXR_Down(dik)) then
+                action_binder:XR_Down()
+            elseif (gamepad.isXR_Right(dik)) then
+                action_binder:XR_Right()
+            elseif (gamepad.isXR_Up(dik)) then
+                action_binder:XR_Up()
             end
+
+            if (action_binder_was_showing and action_binder.is_hidden) then
+                ui:maybe_show_button_hints()
+            end
+            return true
+        end
+
+        if (gamepad.isFM_XbarLeft(dik)) then
+            action_binder:FM_XbarLeft(pressed)
+        elseif (gamepad.isFM_XbarRight(dik)) then
+            action_binder:FM_XbarRight(pressed)
         end
     end
 
     if (env_chooser:is_showing()) then
         -- handle up and down arrows if the environment chooser is showing
-        if gamepad_state.capturing and gamepad.isCS_Previous(dik) then
+        if gamepad.isCS_Previous(dik) then
             local prev_environment = env_chooser:get_prev_environment(player.hotbar, player.hotbar_settings.active_environment)
             set_active_environment(prev_environment)
             env_chooser:show_player_environments(player.hotbar, player.hotbar_settings.active_environment)
             return true
-        elseif gamepad_state.capturing and gamepad.isCS_Next(dik) then -- up dpad
+        elseif gamepad.isCS_Next(dik) then -- up dpad
             local next_environment = env_chooser:get_next_environment(player.hotbar, player.hotbar_settings.active_environment)
             set_active_environment(next_environment)
             env_chooser:show_player_environments(player.hotbar, player.hotbar_settings.active_environment)
@@ -810,8 +718,8 @@ windower.register_event('keyboard', function(dik, pressed, flags, blocked)
         end
     end
 
-    local any_trigger_down = gamepad_state.left_trigger or gamepad_state.right_trigger
-    if (gamepad_state.capturing and any_trigger_down and gamepad.is_face_button_or_dpad(dik)) then
+    local any_trigger_down = gamepad_state.FM_XbarLeft_IsPressed or gamepad_state.FM_XbarRight_IsPressed
+    if (any_trigger_down and gamepad.is_face_button_or_dpad(dik)) then
         if (gamepad.isXL_Left(dik)) then
             trigger_action(1)
         elseif (gamepad.isXL_Down(dik)) then
@@ -831,14 +739,14 @@ windower.register_event('keyboard', function(dik, pressed, flags, blocked)
         end
     end
 
-    if (gamepad_state.capturing and gamepad.isFM_CycleSets(dik)) then
+    if gamepad.isFM_CycleSets(dik) then
         if (pressed) then
-            local environments = env_chooser:get_player_environments(player.hotbar)
             env_chooser:show_player_environments(player.hotbar, player.hotbar_settings.active_environment)
         else
             env_chooser:hide_player_environments()
         end
     end
+
 end)
 
 local frame = 0

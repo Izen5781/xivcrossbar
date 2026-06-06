@@ -181,7 +181,7 @@ HandleJoyButton(joyButton) {
     }
 
     Send_FM_ToggleBind() {
-        SendInput("^{F9 down}")
+        SendInput("^{F9 up}")
     }
 
     Send_FM_CycleSets_Press(keyName, releaseState) {
@@ -190,7 +190,7 @@ HandleJoyButton(joyButton) {
         global FM_CycleSets_PressedState := releaseState
         global FM_CycleSets_IsPressed := true
 
-        SendInput("^!{F10 up}")
+        SendInput("^{F10 up}")
         SetTimer(Send_FM_CycleSets_Release, 10)
     }
 
@@ -201,7 +201,7 @@ HandleJoyButton(joyButton) {
         }
 
         global FM_CycleSets_IsPressed := false
-        SendInput("^{F10 up}")
+        SendInput("^!{F10 up}")
         SetTimer(, 0) ; stop polling
     }
 
@@ -211,7 +211,7 @@ HandleJoyButton(joyButton) {
         global FM_XbarLeft_PressedState := releaseState
         global FM_XbarLeft_IsPressed := true
 
-        SendInput("^!{F11 up}")
+        SendInput("^{F11 up}")
         SetTimer(Send_FM_XbarLeft_Release, 10)
     }
 
@@ -222,7 +222,7 @@ HandleJoyButton(joyButton) {
         }
 
         global FM_XbarLeft_IsPressed := false
-        SendInput("^{F11 up}")
+        SendInput("^!{F11 up}")
         SetTimer(, 0) ; stop polling
     }
 
@@ -232,7 +232,7 @@ HandleJoyButton(joyButton) {
         global FM_XbarRight_PressedState := releaseState
         global FM_XbarRight_IsPressed := true
 
-        SendInput("^!{F12 up}")
+        SendInput("^{F12 up}")
         SetTimer(Send_FM_XbarRight_Release, 10)
     }
 
@@ -243,7 +243,7 @@ HandleJoyButton(joyButton) {
         }
 
         global FM_XbarRight_IsPressed := false
-        SendInput("^{F12 up}")
+        SendInput("^!{F12 up}")
         SetTimer(, 0) ; stop polling
     }
 }

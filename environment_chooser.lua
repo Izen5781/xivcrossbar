@@ -14,8 +14,6 @@ local default_hotbars = {
     ['all-jobs-default'] = true
 }
 
-local ADD_NEW_SET = '+ Add New Set'
-
 -- env_chooser metrics
 env_chooser.hotbar_width = 0
 env_chooser.hotbar_spacing = 0
@@ -46,8 +44,6 @@ env_chooser.disabled_slots.on_warmup = {}
 env_chooser.is_setup = false
 
 env_chooser.is_shown = false
-
-env_chooser.should_close_at = 0
 
 -----------------------------
 -- Helpers
@@ -196,8 +192,6 @@ function env_chooser:get_player_environments(player_hotbar)
        environments:append(environment) 
     end
 
-    environments:append({['name'] = ADD_NEW_SET})
-
     return environments
 end
 
@@ -249,7 +243,6 @@ end
 function env_chooser:show_player_environments(player_hotbar, current_environment)
     self.current_environment = current_environment
     self.is_shown = true
-    self.should_close_at = os.time()
 
     local environments = self:get_player_environments(player_hotbar)
 
@@ -257,9 +250,6 @@ function env_chooser:show_player_environments(player_hotbar, current_environment
         local index = (#environments - i) + 1 -- put first environment at the top instead of bottom
         if (default_hotbars[kebab_casify(environment.name)]) then
             self.environments[index].name_text:text(HAIRLINE .. '\\cs(0,128,255)' .. HIDDEN_SPACE .. environment.name)
-        elseif (environment.name == ADD_NEW_SET) then
-            self.environments[index].name_text:text(HAIRLINE .. '\\cs(0,255,128)' .. HIDDEN_SPACE .. environment.name)
-            self.indexof_add_new_set = index
         else
             self.environments[index].name_text:text(HAIRLINE .. '\\cs(255,255,255)' .. HIDDEN_SPACE .. environment.name)
         end
@@ -281,53 +271,14 @@ function env_chooser:show_player_environments(player_hotbar, current_environment
 end
 
 function env_chooser:hide_player_environments()
-    coroutine.schedule(maybe_hide_me, 0.25)
-    coroutine.schedule(maybe_hide_me, 0.5)
-    coroutine.schedule(maybe_hide_me, 0.75)
-    coroutine.schedule(maybe_hide_me, 1)
-end
+    env_chooser.is_shown = false
 
-function env_chooser:accept_text_entry()
-    self.capturing = true
-    local index = self.indexof_add_new_set
-    local label = HAIRLINE .. '\\cs(0,255,128)' .. HIDDEN_SPACE .. ADD_NEW_SET
-    local text_prompt = HAIRLINE .. '\\cs(0,255,128)' .. HIDDEN_SPACE .. '<Enter Set Name>'
-    if (self.environments[index].name_text:text() == label) then
-        self.new_set_name = ''
-        self.environments[index].name_text:text(text_prompt)
+    for i, environment in pairs(env_chooser.environments) do
+        env_chooser.environments[i].name_text:hide()
     end
-end
 
-function env_chooser:send_key(char)
-    if (self.capturing) then
-        self.new_set_name = self.new_set_name .. char
-
-        local index = self.indexof_add_new_set
-        local text_prompt = HAIRLINE .. '\\cs(0,255,128)' .. HIDDEN_SPACE .. self.new_set_name
-        self.environments[index].name_text:text(text_prompt)
-    end
-end
-
-function env_chooser:send_backspace()
-    if (self.capturing) then
-        self.new_set_name = self.new_set_name:sub(1, -2)
-
-        local text_prompt = ''
-        if (self.new_set_name == '') then
-            text_prompt = HAIRLINE .. '\\cs(0,255,128)' .. HIDDEN_SPACE .. '<Enter Set Name>'
-        else
-            text_prompt = HAIRLINE .. '\\cs(0,255,128)' .. HIDDEN_SPACE .. self.new_set_name
-        end
-
-        local index = self.indexof_add_new_set
-        self.environments[index].name_text:text(text_prompt)
-    end
-end
-
-function env_chooser:send_escape()
-    if (self.capturing) then
-        self:clear()
-    end
+    windower.prim.set_visibility('menu_background', false)
+    windower.prim.set_visibility('menu_highlight', false)
 end
 
 function env_chooser:validate_new_set_name()
@@ -347,36 +298,6 @@ end
 
 function env_chooser:get_new_set_name()
     return self.new_set_name
-end
-
-
-function env_chooser:clear()
-    if (self.capturing) then
-        self.new_set_name = nil
-        hide_me()
-    end
-end
-
-function maybe_hide_me()
-    if (env_chooser.should_close_at < os.time()) then
-        if (env_chooser.current_environment == kebab_casify(ADD_NEW_SET)) then
-            env_chooser:accept_text_entry()
-        else
-            hide_me()
-        end
-    end
-end
-
-function hide_me()
-    env_chooser.capturing = false
-    env_chooser.is_shown = false
-
-    for i, environment in pairs(env_chooser.environments) do
-        env_chooser.environments[i].name_text:hide()
-    end
-
-    windower.prim.set_visibility('menu_background', false)
-    windower.prim.set_visibility('menu_highlight', false)
 end
 
 function env_chooser:is_showing()

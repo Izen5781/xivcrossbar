@@ -1,7 +1,7 @@
 require("lists")
 require("tables")
 
--- TODO: ViewMap button is incorrectly sized/placed
+-- TODO: ViewMap button is incorrectly sized/placed (in non-compat view, when in xbarLeft slot 8)
 -- TODO: generated .xml files have extra <slot9> for some reason, and extra line breaks
 
 local mount_roulette = require('libs/mountroulette/mountroulette')

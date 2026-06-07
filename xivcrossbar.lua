@@ -47,7 +47,32 @@
 -- slot offset = each slot (within each hotbar) specifies its own offset, added to the xbar anchor
 -- template xbar = contains the default slot offsets for ALL slots, but can be overridden by individual slot offsets
 -- ui scale = scales ALL element sizes and offsets by this multiplier, does not affect main anchor
--- MAYBE: let players customize which slot numbers correspond to which cardinal direction?
+
+-- let players customize which slot numbers correspond to which cardinal direction
+-- slot order setting is an 8 character string of the numbers 1 through 8
+-- string character index corresponds to slot number for up/down/left/right on each side
+-- 12345678 = lines up with the current function key numbers
+-- 42138657 = original (left/down/right/up)
+-- 23146758 = flat mode (left/up/down/right)
+
+-- split settings.xml into multiple files? one for theme (icons, if I even keep those) and ui (positioning/slot numbers)
+
+-- when binding keys, show xbarChain + slot number. so LL7, LR3, etc.
+-- when binding keys, animate UI to highlight slot (as if it was normally pressed), then pause UI when asking for "confirm/cancel"
+
+-- enable/disable individual hotbars, rather than specifying hotbar number 1-6
+-- 111000 = default (true/false for each hotbar index)
+-- or maybe flag under each Xbar's settings
+
+-- have flag for specifying visibility of other hotbars when current hotbar is visible
+-- 111111 = show everything (my preference)
+-- 001000 = hide everything except hotbar 3 (matches current hotbar 3 visibility logic)
+-- hotbar 0 (AKA no hotbar selected) also needs to specify this visibility
+-- this can allow you to have permanently invisible hotbars
+
+-- add "showlabels" and "hidelabels" commands to show/hide slot numbers, hotbar numbers, hotbar chains, and anchor points
+-- this is useful for making sure the UI is configured correctly
+-- if the hotbar is permanently invisible, maybe these labels still show when the hotbar is active?
 
 -- Addon description
 _addon.name = 'XIV Crossbar' -- based on Edeon's XIV Hotbar

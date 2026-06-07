@@ -47,6 +47,7 @@
 -- slot offset = each slot (within each hotbar) specifies its own offset, added to the xbar anchor
 -- template xbar = contains the default slot offsets for ALL slots, but can be overridden by individual slot offsets
 -- ui scale = scales ALL element sizes and offsets by this multiplier, does not affect main anchor
+-- MAYBE: let players customize which slot numbers correspond to which cardinal direction?
 
 -- Addon description
 _addon.name = 'XIV Crossbar' -- based on Edeon's XIV Hotbar

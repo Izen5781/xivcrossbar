@@ -74,6 +74,8 @@
 -- this is useful for making sure the UI is configured correctly
 -- if the hotbar is permanently invisible, maybe these labels still show when the hotbar is active?
 
+-- update config.ini and default .xml files to mimic the original mod when completing branch
+
 -- Addon description
 _addon.name = 'XIV Crossbar' -- based on Edeon's XIV Hotbar
 _addon.author = 'Aliekber'

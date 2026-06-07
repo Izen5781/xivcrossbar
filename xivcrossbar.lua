@@ -29,6 +29,10 @@
 -- https://github.com/Windower/Lua/wiki/
 -- https://docs.windower.net/commands/
 
+-- TODO: add keybind for rewriting (what did I mean by this?)
+-- TODO: FEATURE IDEA: "flat mode" where icons are horizontal (left up down right)
+-- TODO: FEATURE IDEA: "left only" or "right only" modes where you only have keybinds for half the controller
+
 -- Addon description
 _addon.name = 'XIV Crossbar' -- based on Edeon's XIV Hotbar
 _addon.author = 'Aliekber'

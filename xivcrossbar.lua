@@ -29,9 +29,24 @@
 -- https://github.com/Windower/Lua/wiki/
 -- https://docs.windower.net/commands/
 
--- TODO: add keybind for rewriting (what did I mean by this?)
+-- TODO: add command for renaming a set
 -- TODO: FEATURE IDEA: "flat mode" where icons are horizontal (left up down right)
 -- TODO: FEATURE IDEA: "left only" or "right only" modes where you only have keybinds for half the controller
+
+-- left/right only mode keeps the "inside" positions of hotbars, ONLY affects rendering, not slot numbers
+-- "1234 5678  1234 5678" becomes
+-- "     1234  1234     " OR
+-- "     5678  5678     "
+-- slot numbers are technically "1423 5867" with current numbering scheme
+-- FF14 numbers the slots: left/up/right/down = 1234
+
+-- give full customization over slot positioning if it isn't granted already. UI settings should specify:
+-- main anchor = all other UI elements are relative to this, this is what gets moved when you tweak position in-game
+-- xbar offset = each xbar (L, R, LR, RL, LL, RR) specifies its own offset from the main anchor
+-- xbar anchor = main anchor + xbar offset, this is a calculated field
+-- slot offset = each slot (within each hotbar) specifies its own offset, added to the xbar anchor
+-- template xbar = contains the default slot offsets for ALL slots, but can be overridden by individual slot offsets
+-- ui scale = scales ALL element sizes and offsets by this multiplier, does not affect main anchor
 
 -- Addon description
 _addon.name = 'XIV Crossbar' -- based on Edeon's XIV Hotbar
